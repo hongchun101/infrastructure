@@ -13,5 +13,7 @@ data class R<out T>(
         private const val SUCCESS_MESSAGE = "success"
 
         fun <T> ok(data: T?): R<T> = R(SUCCESS_CODE, SUCCESS_MESSAGE, data)
+
+        fun error(code: Int, message: String): R<Nothing> = R(code, message, null)
     }
 }

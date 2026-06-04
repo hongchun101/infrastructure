@@ -7,4 +7,7 @@ import org.springframework.context.annotation.Bean
 class CoreWebAutoConfiguration {
     @Bean
     fun rResponseBodyAdvice(): RResponseBodyAdvice = RResponseBodyAdvice()
+
+    @Bean
+    fun globalExceptionHandler(): GlobalExceptionHandler = GlobalExceptionHandler()
 }
