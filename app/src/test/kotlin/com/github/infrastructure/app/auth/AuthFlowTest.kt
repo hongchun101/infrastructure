@@ -1,0 +1,172 @@
+package com.github.infrastructure.app.auth
+
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.infrastructure.app.InfrastructureApplication
+import com.github.infrastructure.app.TestTokenSessionConfiguration
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
+import org.springframework.test.context.ActiveProfiles
+import org.springframework.test.web.servlet.MockMvc
+import org.springframework.test.web.servlet.get
+import org.springframework.test.web.servlet.post
+
+@SpringBootTest(classes = [InfrastructureApplication::class, TestTokenSessionConfiguration::class])
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+class AuthFlowTest(
+    @Autowired private val mockMvc: MockMvc,
+    @Autowired private val objectMapper: ObjectMapper,
+) {
+    @Test
+    fun `login returns uuid tokens stored server side and me uses access token`() {
+        val login = login("admin", "admin123")
+        val data = login.get("data")
+        val accessToken = data.get("accessToken").asText()
+        val refreshToken = data.get("refreshToken").asText()
+
+        assertUuid(accessToken)
+        assertUuid(refreshToken)
+        assertEquals(1800, data.get("accessTokenExpiresInSeconds").asLong())
+        assertEquals(604800, data.get("refreshTokenExpiresInSeconds").asLong())
+
+        val me = mockMvc.get("/me") {
+            header("Authorization", "Bearer $accessToken")
+        }
+            .andExpect { status { isOk() } }
+            .andReturn()
+            .response
+            .contentAsString
+            .let(objectMapper::readTree)
+
+        assertEquals("admin", me.get("data").get("username").asText())
+        assertEquals("ADMIN", me.get("data").get("roles").first().asText())
+        assertEquals("project:read", me.get("data").get("permissions").first().asText())
+    }
+
+    @Test
+    fun `bad credentials disabled users and invalid token return unauthorized envelope`() {
+        val badPassword = loginExpectingUnauthorized("admin", "wrong")
+        assertEquals(401, badPassword.get("code").asInt())
+        assertEquals("unauthorized", badPassword.get("message").asText())
+
+        val disabled = loginExpectingUnauthorized("disabled", "admin123")
+        assertEquals(401, disabled.get("code").asInt())
+
+        val invalidToken = mockMvc.get("/me") {
+            header("Authorization", "Bearer not-a-real-token")
+        }
+            .andExpect { status { isUnauthorized() } }
+            .andReturn()
+            .response
+            .contentAsString
+            .let(objectMapper::readTree)
+
+        assertEquals(401, invalidToken.get("code").asInt())
+        assertEquals("unauthorized", invalidToken.get("message").asText())
+    }
+
+    @Test
+    fun `refresh rotates token pair and old tokens stop working`() {
+        val first = login("admin", "admin123").get("data")
+        val refreshed = mockMvc.post("/auth/refresh") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"refreshToken":"${first.get("refreshToken").asText()}"}"""
+        }
+            .andExpect { status { isOk() } }
+            .andReturn()
+            .response
+            .contentAsString
+            .let(objectMapper::readTree)
+            .get("data")
+
+        assertNotEquals(first.get("accessToken").asText(), refreshed.get("accessToken").asText())
+        assertNotEquals(first.get("refreshToken").asText(), refreshed.get("refreshToken").asText())
+
+        mockMvc.get("/me") {
+            header("Authorization", "Bearer ${first.get("accessToken").asText()}")
+        }.andExpect { status { isUnauthorized() } }
+
+        mockMvc.post("/auth/refresh") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"refreshToken":"${first.get("refreshToken").asText()}"}"""
+        }.andExpect { status { isUnauthorized() } }
+
+        mockMvc.get("/me") {
+            header("Authorization", "Bearer ${refreshed.get("accessToken").asText()}")
+        }.andExpect { status { isOk() } }
+    }
+
+    @Test
+    fun `logout invalidates current access and refresh tokens`() {
+        val tokens = login("admin", "admin123").get("data")
+        val accessToken = tokens.get("accessToken").asText()
+        val refreshToken = tokens.get("refreshToken").asText()
+
+        mockMvc.post("/auth/logout") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect { status { isOk() } }
+
+        mockMvc.get("/me") {
+            header("Authorization", "Bearer $accessToken")
+        }.andExpect { status { isUnauthorized() } }
+
+        mockMvc.post("/auth/refresh") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"refreshToken":"$refreshToken"}"""
+        }.andExpect { status { isUnauthorized() } }
+    }
+
+    @Test
+    fun `trace id is present for success and error responses`() {
+        val loginResponse = mockMvc.post("/auth/login") {
+            header("X-Trace-Id", "trace-from-client")
+            contentType = MediaType.APPLICATION_JSON
+            content = """{"username":"admin","password":"admin123"}"""
+        }
+            .andExpect { status { isOk() } }
+            .andReturn()
+            .response
+
+        assertEquals("trace-from-client", loginResponse.getHeader("X-Trace-Id"))
+
+        val errorResponse = mockMvc.get("/me")
+            .andExpect { status { isUnauthorized() } }
+            .andReturn()
+            .response
+
+        assertNotNull(errorResponse.getHeader("X-Trace-Id"))
+    }
+
+    private fun login(username: String, password: String): JsonNode = mockMvc.post("/auth/login") {
+        contentType = MediaType.APPLICATION_JSON
+        content = """{"username":"$username","password":"$password"}"""
+    }
+        .andExpect { status { isOk() } }
+        .andReturn()
+        .response
+        .contentAsString
+        .let(objectMapper::readTree)
+
+    private fun loginExpectingUnauthorized(username: String, password: String): JsonNode = mockMvc.post("/auth/login") {
+        contentType = MediaType.APPLICATION_JSON
+        content = """{"username":"$username","password":"$password"}"""
+    }
+        .andExpect { status { isUnauthorized() } }
+        .andReturn()
+        .response
+        .contentAsString
+        .let(objectMapper::readTree)
+
+    private fun assertUuid(value: String) {
+        val uuidPattern = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
+        assertTrue(uuidPattern.matches(value), "$value is not a UUID")
+    }
+}

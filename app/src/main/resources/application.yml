@@ -19,3 +19,16 @@ jimmer:
   dialect: org.babyfish.jimmer.sql.dialect.PostgresDialect
   show-sql: true
   pretty-sql: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+infrastructure:
+  security:
+    access-token-ttl: 30m
+    refresh-token-ttl: 7d
+  observability:
+    trace-header: X-Trace-Id
