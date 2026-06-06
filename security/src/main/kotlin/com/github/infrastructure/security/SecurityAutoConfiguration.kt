@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -50,7 +50,7 @@ class SecurityAutoConfiguration {
         val template = RedisTemplate<String, TokenSession>()
         template.connectionFactory = redisConnectionFactory
         template.keySerializer = StringRedisSerializer()
-        template.valueSerializer = GenericJackson2JsonRedisSerializer(objectMapper)
+        template.valueSerializer = Jackson2JsonRedisSerializer(objectMapper, TokenSession::class.java)
         template.afterPropertiesSet()
         return template
     }

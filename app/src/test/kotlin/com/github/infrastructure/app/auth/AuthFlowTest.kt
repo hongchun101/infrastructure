@@ -3,7 +3,7 @@ package com.github.infrastructure.app.auth
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.infrastructure.app.InfrastructureApplication
-import com.github.infrastructure.app.TestTokenSessionConfiguration
+import com.github.infrastructure.app.EmbeddedRedisTestConfiguration
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -18,7 +18,7 @@ import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.get
 import org.springframework.test.web.servlet.post
 
-@SpringBootTest(classes = [InfrastructureApplication::class, TestTokenSessionConfiguration::class])
+@SpringBootTest(classes = [InfrastructureApplication::class, EmbeddedRedisTestConfiguration::class])
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 class AuthFlowTest(

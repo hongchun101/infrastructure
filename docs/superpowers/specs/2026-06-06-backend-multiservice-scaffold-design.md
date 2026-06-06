@@ -288,7 +288,7 @@ Project endpoints:
 
 ## Configuration
 
-Default local configuration targets Docker Compose services:
+Default local configuration targets local PostgreSQL and Redis services. `compose.yml` documents matching service defaults for developers who use Compose, but tests must not require Docker.
 
 - PostgreSQL: `localhost:5432`, database `infrastructure`, user `infrastructure`.
 - Redis: `localhost:6379`.
@@ -341,7 +341,7 @@ The implementation should cut over cleanly from the current shape:
 4. Update Gradle settings to include all modules.
 5. Align tests and packages to `com.github.infrastructure`.
 6. Remove stale `com.example.infrastructure` paths and outdated assumptions from previous notes as affected files are touched.
-7. Keep `compose.yml` with PostgreSQL and Redis because both are required by default.
+7. Keep `compose.yml` as optional local service documentation for PostgreSQL and Redis; verification must also work without Docker.
 
 ## Non-goals
 
@@ -357,10 +357,10 @@ The implementation should cut over cleanly from the current shape:
 
 - The repository builds with Gradle.
 - `app` starts as the default runnable service.
-- PostgreSQL and Redis are both required local dependencies and are represented in `compose.yml`.
+- PostgreSQL and Redis are represented in `compose.yml` for local development; automated tests use H2 and embedded Redis so verification does not require Docker.
 - Flyway creates user, role, permission, and project tables.
 - Jimmer entities map to the Flyway schema.
-- Login returns dual UUID tokens stored in Redis.
+- Production login returns dual UUID tokens stored through the Redis-backed `TokenSessionRepository`; tests verify the same token lifecycle contract through the repository interface without Docker.
 - Protected endpoints reject missing or invalid tokens.
 - Refresh rotates tokens and invalidates old tokens.
 - Logout invalidates the current token pair.

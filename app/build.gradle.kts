@@ -40,6 +40,7 @@ dependencies {
     ksp("org.babyfish.jimmer:jimmer-ksp:$jimmerVersion")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("com.github.codemonstur:embedded-redis:1.4.3")
     testRuntimeOnly("com.h2database:h2")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

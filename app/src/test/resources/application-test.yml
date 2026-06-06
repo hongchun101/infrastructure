@@ -8,8 +8,8 @@ spring:
     driver-class-name: org.h2.Driver
   data:
     redis:
-      repositories:
-        enabled: false
+      host: localhost
+      port: 16379
   web:
     resources:
       add-mappings: false
