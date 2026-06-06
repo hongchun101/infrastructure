@@ -5,4 +5,5 @@ core/build/
 .idea/
 *.iml
 out/
+.worktrees/
 .DS_Store
