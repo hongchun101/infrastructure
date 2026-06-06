@@ -39,8 +39,8 @@ create table projects (
 );
 
 insert into users (id, username, password_hash, display_name, enabled, created_time) values
-('00000000-0000-0000-0000-000000000001', 'admin', '$2a$10$tyl.T7LJM6ZmHqGo/sBc9eDAJq9yRlPKO/L4THUQnQiqYqlHlAhxG', 'Administrator', true, '2026-06-06 00:00:00'),
-('00000000-0000-0000-0000-000000000002', 'disabled', '$2a$10$tyl.T7LJM6ZmHqGo/sBc9eDAJq9yRlPKO/L4THUQnQiqYqlHlAhxG', 'Disabled User', false, '2026-06-06 00:00:00');
+('00000000-0000-0000-0000-000000000001', 'admin', '$2a$10$IbukqwN.OfTRNBkBDJHQgOUUIYxD9A8qeR67En4RRbmR5H1tjytCS', 'Administrator', true, '2026-06-06 00:00:00'),
+('00000000-0000-0000-0000-000000000002', 'disabled', '$2a$10$IbukqwN.OfTRNBkBDJHQgOUUIYxD9A8qeR67En4RRbmR5H1tjytCS', 'Disabled User', false, '2026-06-06 00:00:00');
 
 insert into roles (id, code, name) values
 ('00000000-0000-0000-0000-000000000101', 'ADMIN', 'Administrator');
