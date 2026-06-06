@@ -19,3 +19,6 @@ dependencyResolutionManagement {
 rootProject.name = "infrastructure"
 
 include("core")
+include("security")
+include("observability")
+include("app")

@@ -1,9 +1,9 @@
-package com.github.infrastructure
+package com.github.infrastructure.app
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = ["com.github.infrastructure"])
 class InfrastructureApplication
 
 fun main(args: Array<String>) {

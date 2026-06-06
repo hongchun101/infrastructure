@@ -1,4 +1,4 @@
-package com.github.infrastructure
+package com.github.infrastructure.app
 
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -7,8 +7,7 @@ import org.springframework.test.context.ActiveProfiles
 @SpringBootTest(classes = [InfrastructureApplication::class])
 @ActiveProfiles("test")
 class InfrastructureApplicationTests {
-
     @Test
-    fun `context loads`() {
+    fun `context loads from app module`() {
     }
 }
