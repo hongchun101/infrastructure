@@ -48,7 +48,9 @@ class AuthFlowTest(
 
         assertEquals("admin", me.get("data").get("username").asText())
         assertEquals("ADMIN", me.get("data").get("roles").first().asText())
-        assertEquals("project:read", me.get("data").get("permissions").first().asText())
+        val permissions = me.get("data").get("permissions").map { it.asText() }
+        assertTrue(permissions.contains("project:read"))
+        assertTrue(permissions.contains("project:write"))
     }
 
     @Test

@@ -23,7 +23,10 @@ class DatabaseSecurityUserAccountRepositoryTest(
         assertEquals("Administrator", account.displayName)
         assertEquals(true, account.enabled)
         assertEquals(listOf("ADMIN"), account.roles)
-        assertEquals(listOf("project:read", "project:write"), account.permissions)
+        assertEquals(
+            setOf("project:read", "project:write", "operation:log:read"),
+            account.permissions.toSet(),
+        )
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.github.infrastructure.app.dictionary
 
+import com.github.infrastructure.app.audit.OperationLog
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,6 +24,7 @@ class DictionaryController(
         dictionaryService.getCategoryByCode(code)
 
     @PostMapping("/dictionaries")
+    @OperationLog(module = "dictionary", action = "create-category", description = "Create dictionary category")
     fun createCategory(@Valid @RequestBody request: CreateDictionaryCategoryRequest): DictionaryCategoryResponse =
         dictionaryService.createCategory(request)
 
@@ -33,6 +35,7 @@ class DictionaryController(
     ): DictionaryCategoryResponse = dictionaryService.updateCategory(id, request)
 
     @DeleteMapping("/dictionaries/{id}")
+    @OperationLog(module = "dictionary", action = "delete-category", description = "Delete dictionary category")
     fun deleteCategory(@PathVariable id: UUID) {
         dictionaryService.deleteCategory(id)
     }
