@@ -1,7 +1,8 @@
 package com.github.infrastructure.app.user
 
-import com.github.infrastructure.security.SecurityUserAccount
-import com.github.infrastructure.security.SecurityUserAccountRepository
+import com.github.infrastructure.security.auth.LoginMode
+import com.github.infrastructure.security.user.SecurityUserAccount
+import com.github.infrastructure.security.user.SecurityUserAccountRepository
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Repository
 import java.util.UUID
@@ -10,15 +11,20 @@ import java.util.UUID
 class DatabaseSecurityUserAccountRepository(
     private val jdbcClient: JdbcClient,
 ) : SecurityUserAccountRepository {
-    override fun findByUsername(username: String): SecurityUserAccount? {
+    override fun findForLogin(mode: LoginMode, principal: String): SecurityUserAccount? {
+        val column = when (mode) {
+            LoginMode.USERNAME -> "username"
+            LoginMode.EMAIL -> "email"
+            LoginMode.PHONE -> "phone"
+        }
         val user = jdbcClient.sql(
             """
             select id, username, password_hash, display_name, enabled
             from users
-            where username = :username
+            where $column = :principal
             """.trimIndent(),
         )
-            .param("username", username)
+            .param("principal", principal)
             .query { rs, _ ->
                 UserRow(
                     id = rs.getObject("id", UUID::class.java),

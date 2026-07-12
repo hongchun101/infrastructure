@@ -9,7 +9,7 @@ This repository is the base for future backend projects. The current codebase is
 - Local `compose.yml` for PostgreSQL and Redis.
 - Current application package is `com.github.infrastructure`.
 
-Previous design notes still reference a single-module `com.example.infrastructure` shape. The scaffold will cut over to the current `com.github.infrastructure` direction and remove that mismatch.
+Previous design notes still reference a single-module `com.xample.infrastructure` shape. The scaffold will cut over to the current `com.github.infrastructure` direction and remove that mismatch.
 
 ## Selected approach
 

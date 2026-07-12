@@ -1,6 +1,8 @@
 create table users (
     id uuid primary key,
     username varchar(100) not null unique,
+    email varchar(255) unique,
+    phone varchar(32) unique,
     password_hash varchar(100) not null,
     display_name varchar(100) not null,
     enabled boolean not null,
@@ -38,9 +40,9 @@ create table projects (
     created_time timestamp not null
 );
 
-insert into users (id, username, password_hash, display_name, enabled, created_time) values
-('00000000-0000-0000-0000-000000000001', 'admin', '$2a$10$IbukqwN.OfTRNBkBDJHQgOUUIYxD9A8qeR67En4RRbmR5H1tjytCS', 'Administrator', true, '2026-06-06 00:00:00'),
-('00000000-0000-0000-0000-000000000002', 'disabled', '$2a$10$IbukqwN.OfTRNBkBDJHQgOUUIYxD9A8qeR67En4RRbmR5H1tjytCS', 'Disabled User', false, '2026-06-06 00:00:00');
+insert into users (id, username, email, phone, password_hash, display_name, enabled, created_time) values
+('00000000-0000-0000-0000-000000000001', 'admin', 'admin@example.com', '13800000000', '$2a$10$IbukqwN.OfTRNBkBDJHQgOUUIYxD9A8qeR67En4RRbmR5H1tjytCS', 'Administrator', true, '2026-06-06 00:00:00'),
+('00000000-0000-0000-0000-000000000002', 'disabled', 'disabled@example.com', '13800000001', '$2a$10$IbukqwN.OfTRNBkBDJHQgOUUIYxD9A8qeR67En4RRbmR5H1tjytCS', 'Disabled User', false, '2026-06-06 00:00:00');
 
 insert into roles (id, code, name) values
 ('00000000-0000-0000-0000-000000000101', 'ADMIN', 'Administrator');

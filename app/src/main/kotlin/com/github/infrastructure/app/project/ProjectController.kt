@@ -1,6 +1,6 @@
 package com.github.infrastructure.app.project
 
-import com.github.infrastructure.security.CurrentUserContext
+import com.github.infrastructure.security.context.CurrentUserContext
 import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping

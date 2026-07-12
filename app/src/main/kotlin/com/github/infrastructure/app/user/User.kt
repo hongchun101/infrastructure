@@ -12,6 +12,8 @@ interface User {
     @Id
     val id: UUID
     val username: String
+    val email: String?
+    val phone: String?
     val passwordHash: String
     val displayName: String
     val enabled: Boolean

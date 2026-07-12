@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.project
 
-import com.github.infrastructure.core.web.BusinessException
-import com.github.infrastructure.security.AuthenticatedUser
+import com.github.infrastructure.core.web.exception.BusinessException
+import com.github.infrastructure.security.context.AuthenticatedUser
 import org.springframework.http.HttpStatus
 import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service

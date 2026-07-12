@@ -1,1 +1,1 @@
-com.github.infrastructure.core.web.CoreWebAutoConfiguration
+com.github.infrastructure.core.web.config.CoreWebAutoConfiguration

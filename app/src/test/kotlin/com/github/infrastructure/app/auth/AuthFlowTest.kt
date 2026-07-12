@@ -52,6 +52,23 @@ class AuthFlowTest(
     }
 
     @Test
+    fun `login supports email and phone modes`() {
+        val emailLogin = login(LoginModePayload("EMAIL", "admin@example.com", "admin123")).get("data")
+        val phoneLogin = login(LoginModePayload("PHONE", "13800000000", "admin123")).get("data")
+
+        assertUuid(emailLogin.get("accessToken").asText())
+        assertUuid(phoneLogin.get("accessToken").asText())
+
+        mockMvc.get("/me") {
+            header("Authorization", "Bearer ${emailLogin.get("accessToken").asText()}")
+        }.andExpect { status { isOk() } }
+
+        mockMvc.get("/me") {
+            header("Authorization", "Bearer ${phoneLogin.get("accessToken").asText()}")
+        }.andExpect { status { isOk() } }
+    }
+
+    @Test
     fun `bad credentials disabled users and invalid token return unauthorized envelope`() {
         val badPassword = loginExpectingUnauthorized("admin", "wrong")
         assertEquals(401, badPassword.get("code").asInt())
@@ -145,9 +162,13 @@ class AuthFlowTest(
         assertNotNull(errorResponse.getHeader("X-Trace-Id"))
     }
 
-    private fun login(username: String, password: String): JsonNode = mockMvc.post("/auth/login") {
+    private fun login(username: String, password: String): JsonNode = login("""{"username":"$username","password":"$password"}""")
+
+    private fun login(payload: LoginModePayload): JsonNode = login("""{"mode":"${payload.mode}","principal":"${payload.principal}","password":"${payload.password}"}""")
+
+    private fun login(json: String): JsonNode = mockMvc.post("/auth/login") {
         contentType = MediaType.APPLICATION_JSON
-        content = """{"username":"$username","password":"$password"}"""
+        content = json
     }
         .andExpect { status { isOk() } }
         .andReturn()
@@ -165,6 +186,12 @@ class AuthFlowTest(
         .contentAsString
         .let(objectMapper::readTree)
 
+
+    private data class LoginModePayload(
+        val mode: String,
+        val principal: String,
+        val password: String,
+    )
     private fun assertUuid(value: String) {
         val uuidPattern = Regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$")
         assertTrue(uuidPattern.matches(value), "$value is not a UUID")
