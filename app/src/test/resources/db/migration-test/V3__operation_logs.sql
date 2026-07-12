@@ -1,5 +1,7 @@
+-- Operation log (test environment: H2 in PostgreSQL mode, no native partition support)
+
 create table operation_logs (
-    id uuid not null primary key,
+    id uuid not null,
     trace_id varchar(64),
     user_id uuid,
     username varchar(100),
@@ -15,7 +17,8 @@ create table operation_logs (
     user_agent varchar(500),
     duration_ms bigint not null,
     success boolean not null,
-    created_time timestamp not null
+    created_time timestamp not null,
+    primary key (id, created_time)
 );
 
 create index operation_logs_created_time_idx on operation_logs (created_time desc);

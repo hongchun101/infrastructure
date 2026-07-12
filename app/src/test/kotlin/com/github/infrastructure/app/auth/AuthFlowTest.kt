@@ -51,6 +51,8 @@ class AuthFlowTest(
         val permissions = me.get("data").get("permissions").map { it.asText() }
         assertTrue(permissions.contains("project:read"))
         assertTrue(permissions.contains("project:write"))
+        assertTrue(permissions.contains("announcement:read"))
+        assertTrue(permissions.contains("announcement:write"))
     }
 
     @Test
