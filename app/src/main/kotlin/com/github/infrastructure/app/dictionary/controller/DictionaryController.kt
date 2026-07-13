@@ -1,6 +1,13 @@
-package com.github.infrastructure.app.dictionary
+package com.github.infrastructure.app.dictionary.controller
 
 import com.github.infrastructure.app.audit.OperationLog
+import com.github.infrastructure.app.dictionary.CreateDictionaryCategoryRequest
+import com.github.infrastructure.app.dictionary.CreateDictionaryItemRequest
+import com.github.infrastructure.app.dictionary.DictionaryCategoryResponse
+import com.github.infrastructure.app.dictionary.DictionaryItemResponse
+import com.github.infrastructure.app.dictionary.UpdateDictionaryCategoryRequest
+import com.github.infrastructure.app.dictionary.UpdateDictionaryItemRequest
+import com.github.infrastructure.app.dictionary.service.DictionaryService
 import jakarta.validation.Valid
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
