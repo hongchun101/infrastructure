@@ -15,6 +15,8 @@ import java.util.UUID
 @Entity
 @Table(name = "announcement_reads")
 interface AnnouncementRead {
+    @org.babyfish.jimmer.sql.Id
+    val id: UUID
     @Key
     @ManyToOne
     @JoinColumn(name = "announcement_id")

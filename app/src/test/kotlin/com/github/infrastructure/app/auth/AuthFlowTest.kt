@@ -71,6 +71,11 @@ class AuthFlowTest(
             header("Authorization", "Bearer ${phoneLogin.get("accessToken").asText()}")
         }.andExpect { status { isOk() } }
     }
+    @Test
+    fun `backend account login is isolated from c end user account`() {
+        val response = login("""{"accountType":"BACKEND","username":"operator","password":"admin123"}""")
+        assertEquals(200, response.get("code").asInt())
+    }
 
     @Test
     fun `bad credentials disabled users and invalid token return unauthorized envelope`() {

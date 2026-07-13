@@ -2,12 +2,18 @@ package com.github.infrastructure.app.user
 
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
+import com.github.infrastructure.security.auth.LoginMode
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
 class UserRepository(sql: KSqlClient) : AbstractKotlinRepository<User, UUID>(sql) {
+    fun findForLogin(mode: LoginMode, principal: String): User? = when (mode) {
+        LoginMode.USERNAME -> findByUsername(principal)
+        LoginMode.EMAIL -> findByEmail(principal)
+        LoginMode.PHONE -> findByPhone(principal)
+    }
     fun findByUsername(username: String): User? = createQuery {
         where(table.username eq username)
         select(table)

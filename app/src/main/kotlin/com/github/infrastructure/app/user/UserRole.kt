@@ -10,6 +10,8 @@ import java.util.UUID
 @Entity
 @Table(name = "user_roles")
 interface UserRole {
+    @org.babyfish.jimmer.sql.Id
+    val id: UUID
     @Key
     @ManyToOne
     val user: User

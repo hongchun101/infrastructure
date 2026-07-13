@@ -12,6 +12,7 @@ class AnnouncementReadRepository(sql: KSqlClient) : AbstractKotlinRepository<Ann
     fun markRead(announcementId: UUID, userId: UUID, readAt: LocalDateTime) {
         save(
             AnnouncementRead {
+                id = UUID.nameUUIDFromBytes("$announcementId:$userId".toByteArray())
                 this.announcementId = announcementId
                 this.userId = userId
                 this.readAt = readAt

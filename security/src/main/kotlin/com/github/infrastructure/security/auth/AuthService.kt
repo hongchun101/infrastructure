@@ -14,6 +14,10 @@ import java.time.Clock
 import java.time.Instant
 import org.springframework.http.HttpStatus
 
+enum class AccountType {
+    USER,
+    BACKEND,
+}
 enum class LoginMode {
     USERNAME,
     EMAIL,
@@ -25,6 +29,7 @@ data class LoginRequest(
     val password: String,
     val mode: LoginMode = LoginMode.USERNAME,
     val principal: String? = null,
+    val accountType: AccountType = AccountType.USER,
 )
 data class RefreshTokenRequest(
     val refreshToken: String,
@@ -42,7 +47,7 @@ class AuthService(
         if (principal.isNullOrBlank()) {
             throw unauthorized()
         }
-        val account = userAccountRepository.findForLogin(request.mode, principal) ?: throw unauthorized()
+        val account = userAccountRepository.findForLogin(request.accountType, request.mode, principal) ?: throw unauthorized()
         if (!account.enabled || !passwordHasher.matches(request.password, account.passwordHash)) {
             throw unauthorized()
         }
@@ -86,6 +91,7 @@ class AuthService(
             displayName = displayName,
             roles = roles,
             permissions = permissions,
+            accountType = accountType,
         )
 }
 fun unauthorized(): BusinessException = BusinessException(HttpStatus.UNAUTHORIZED.value(), "unauthorized", HttpStatus.UNAUTHORIZED)

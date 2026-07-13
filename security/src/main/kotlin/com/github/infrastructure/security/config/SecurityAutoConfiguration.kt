@@ -46,6 +46,7 @@ class SecurityAutoConfiguration {
     @ConditionalOnMissingBean
     fun passwordHasher(passwordEncoder: PasswordEncoder): PasswordHasher = object : PasswordHasher {
         override fun matches(rawPassword: String, passwordHash: String): Boolean = passwordEncoder.matches(rawPassword, passwordHash)
+        override fun encode(rawPassword: String): String = passwordEncoder.encode(rawPassword)
     }
     @Bean
     @ConditionalOnMissingBean
