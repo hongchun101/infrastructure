@@ -1,39 +1,24 @@
-package com.github.infrastructure.security.auth
+package com.github.infrastructure.security.service
 
-import com.github.infrastructure.core.web.exception.BusinessException
+import com.github.infrastructure.security.auth.AccountType
+import com.github.infrastructure.security.auth.LoginMode
+import com.github.infrastructure.security.auth.LoginRequest
+import com.github.infrastructure.security.auth.RefreshTokenRequest
+import com.github.infrastructure.security.auth.unauthorized
 import com.github.infrastructure.security.config.SecurityProperties
 import com.github.infrastructure.security.context.AuthenticatedUser
 import com.github.infrastructure.security.password.PasswordHasher
+import com.github.infrastructure.security.repository.SecurityUserAccountRepository
 import com.github.infrastructure.security.token.TokenPair
 import com.github.infrastructure.security.token.TokenSession
 import com.github.infrastructure.security.token.TokenSessionRepository
 import com.github.infrastructure.security.token.UuidTokenGenerator
 import com.github.infrastructure.security.user.SecurityUserAccount
-import com.github.infrastructure.security.user.SecurityUserAccountRepository
+import org.springframework.stereotype.Service
 import java.time.Clock
 import java.time.Instant
-import org.springframework.http.HttpStatus
 
-enum class AccountType {
-    USER,
-    BACKEND,
-}
-enum class LoginMode {
-    USERNAME,
-    EMAIL,
-    PHONE,
-}
-
-data class LoginRequest(
-    val username: String? = null,
-    val password: String,
-    val mode: LoginMode = LoginMode.USERNAME,
-    val principal: String? = null,
-    val accountType: AccountType = AccountType.USER,
-)
-data class RefreshTokenRequest(
-    val refreshToken: String,
-)
+@Service
 class AuthService(
     private val userAccountRepository: SecurityUserAccountRepository,
     private val tokenSessionRepository: TokenSessionRepository,
@@ -94,4 +79,3 @@ class AuthService(
             accountType = accountType,
         )
 }
-fun unauthorized(): BusinessException = BusinessException(HttpStatus.UNAUTHORIZED.value(), "unauthorized", HttpStatus.UNAUTHORIZED)

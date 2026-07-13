@@ -1,7 +1,8 @@
-package com.github.infrastructure.security.user
+package com.github.infrastructure.security.repository
 
 import com.github.infrastructure.security.auth.AccountType
 import com.github.infrastructure.security.auth.LoginMode
+import com.github.infrastructure.security.user.SecurityUserAccount
 
 interface SecurityUserAccountRepository {
     fun findForLogin(accountType: AccountType, mode: LoginMode, principal: String): SecurityUserAccount? =

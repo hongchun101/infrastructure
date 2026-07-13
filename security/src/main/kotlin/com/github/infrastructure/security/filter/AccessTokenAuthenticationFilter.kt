@@ -1,8 +1,8 @@
 package com.github.infrastructure.security.filter
 
 import com.github.infrastructure.core.web.exception.BusinessException
-import com.github.infrastructure.security.auth.AuthService
 import com.github.infrastructure.security.auth.bearerToken
+import com.github.infrastructure.security.service.AuthService
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse

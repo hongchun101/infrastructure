@@ -3,7 +3,7 @@ package com.github.infrastructure.app.user.repository
 import com.github.infrastructure.security.auth.AccountType
 import com.github.infrastructure.security.auth.LoginMode
 import com.github.infrastructure.security.user.SecurityUserAccount
-import com.github.infrastructure.security.user.SecurityUserAccountRepository
+import com.github.infrastructure.security.repository.SecurityUserAccountRepository
 import org.springframework.stereotype.Repository
 import org.springframework.transaction.annotation.Transactional
 import java.util.UUID

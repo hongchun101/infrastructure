@@ -1,7 +1,12 @@
-package com.github.infrastructure.security.auth
+package com.github.infrastructure.security.controller
 
+import com.github.infrastructure.security.auth.LoginRequest
+import com.github.infrastructure.security.auth.RefreshTokenRequest
+import com.github.infrastructure.security.auth.bearerToken
+import com.github.infrastructure.security.auth.unauthorized
 import com.github.infrastructure.security.context.AuthenticatedUser
 import com.github.infrastructure.security.context.CurrentUserContext
+import com.github.infrastructure.security.service.AuthService
 import com.github.infrastructure.security.token.TokenPair
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.web.bind.annotation.GetMapping
@@ -23,11 +28,4 @@ class AuthController(
     }
     @GetMapping("/me")
     fun me(): AuthenticatedUser = CurrentUserContext.require()
-}
-fun bearerToken(request: HttpServletRequest): String? {
-    val header = request.getHeader("Authorization") ?: return null
-    if (!header.startsWith("Bearer ")) {
-        return null
-    }
-    return header.removePrefix("Bearer ").takeIf { it.isNotBlank() }
 }
