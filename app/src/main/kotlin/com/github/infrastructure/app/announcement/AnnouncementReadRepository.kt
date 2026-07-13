@@ -1,18 +1,16 @@
 package com.github.infrastructure.app.announcement
 
+import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
-import org.babyfish.jimmer.sql.kt.ast.expression.eq
-import org.babyfish.jimmer.sql.kt.ast.mutation.SaveMode
+import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.UUID
 
 @Repository
-class AnnouncementReadRepository(
-    private val sql: KSqlClient,
-) {
+class AnnouncementReadRepository(sql: KSqlClient) : AbstractKotlinRepository<AnnouncementRead, UUID>(sql) {
     fun markRead(announcementId: UUID, userId: UUID, readAt: LocalDateTime) {
-        sql.save(
+        save(
             AnnouncementRead {
                 this.announcementId = announcementId
                 this.userId = userId

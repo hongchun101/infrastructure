@@ -1,6 +1,7 @@
 package com.github.infrastructure.app.announcement
 
-import org.babyfish.jimmer.spring.repository.JRepository
+import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
+import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.coalesce
 import org.babyfish.jimmer.sql.kt.ast.expression.count
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
@@ -10,18 +11,17 @@ import org.babyfish.jimmer.sql.kt.ast.expression.notIn
 import org.babyfish.jimmer.sql.kt.ast.expression.or
 import org.babyfish.jimmer.sql.kt.ast.expression.value
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
-import org.babyfish.jimmer.sql.kt.toKSqlClient
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository
-interface AnnouncementRepository : JRepository<Announcement, UUID> {
+class AnnouncementRepository(sql: KSqlClient) : AbstractKotlinRepository<Announcement, UUID>(sql) {
     fun list(
         status: String?,
         keyword: String?,
         viewerId: UUID?,
         unreadOnly: Boolean,
-    ): List<Announcement> = toKSqlClient(sql()).createQuery(Announcement::class) {
+    ): List<Announcement> = executeQuery {
         if (status != null) where(table.status eq status)
         if (!keyword.isNullOrBlank()) {
             val pattern = "%${keyword.lowercase()}%"
@@ -37,19 +37,26 @@ interface AnnouncementRepository : JRepository<Announcement, UUID> {
         }
         orderBy(table.priority.desc(), table.createdTime.desc())
         select(table)
-    }.execute()
+    }
 
     fun countReadsByAnnouncementIds(announcementIds: Collection<UUID>): Map<UUID, Int> {
         if (announcementIds.isEmpty()) return emptyMap()
-        return toKSqlClient(sql()).createQuery(AnnouncementRead::class) {
+        return sql.createQuery(AnnouncementRead::class) {
             where(table.announcementId valueIn announcementIds)
             groupBy(table.announcementId)
             select(table.announcementId, count(table.userId))
         }.execute().associate { it._1 to it._2 }
     }
 
+    fun existsReadByUser(announcementId: UUID, userId: UUID): Boolean =
+        sql.createQuery(AnnouncementRead::class) {
+            where(table.announcementId eq announcementId)
+            where(table.userId eq userId)
+            selectCount()
+        }.fetchUnlimitedCount() > 0
+
     fun findReadAnnouncementIds(userId: UUID, announcementIds: Collection<UUID>): List<UUID> =
-        toKSqlClient(sql()).createQuery(AnnouncementRead::class) {
+        sql.createQuery(AnnouncementRead::class) {
             where(table.userId eq userId)
             where(table.announcementId valueIn announcementIds)
             select(table.announcementId)
