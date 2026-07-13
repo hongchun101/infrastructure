@@ -1,6 +1,8 @@
-package com.github.infrastructure.app.user
+package com.github.infrastructure.app.user.controller
 
-import com.github.infrastructure.security.auth.AccountType
+import com.github.infrastructure.app.user.BackendAccountResponse
+import com.github.infrastructure.app.user.CreateBackendAccountRequest
+import com.github.infrastructure.app.user.service.BackendAccountService
 import jakarta.validation.Valid
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PostMapping

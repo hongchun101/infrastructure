@@ -1,4 +1,4 @@
-package com.github.infrastructure.app.user
+package com.github.infrastructure.app.user.repository
 
 import com.github.infrastructure.security.auth.AccountType
 import com.github.infrastructure.security.auth.LoginMode

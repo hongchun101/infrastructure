@@ -1,13 +1,13 @@
-package com.github.infrastructure.app.user
+package com.github.infrastructure.app.user.repository
 
 import com.github.infrastructure.app.InfrastructureApplication
+import com.github.infrastructure.security.auth.LoginMode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
-import com.github.infrastructure.security.auth.LoginMode
 
 @SpringBootTest(classes = [InfrastructureApplication::class])
 @ActiveProfiles("test")

@@ -1,10 +1,12 @@
-package com.github.infrastructure.app.user
+package com.github.infrastructure.app.user.repository
 
-import org.springframework.stereotype.Repository
+import com.github.infrastructure.app.user.BackendAccount
+import com.github.infrastructure.app.user.*
 import com.github.infrastructure.security.auth.LoginMode
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
+import org.springframework.stereotype.Repository
 import java.util.UUID
 
 @Repository

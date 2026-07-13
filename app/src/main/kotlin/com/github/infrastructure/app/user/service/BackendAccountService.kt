@@ -1,6 +1,11 @@
-package com.github.infrastructure.app.user
+package com.github.infrastructure.app.user.service
 
+import com.github.infrastructure.app.user.BackendAccount
+import com.github.infrastructure.app.user.BackendAccountResponse
+import com.github.infrastructure.app.user.CreateBackendAccountRequest
+import com.github.infrastructure.app.user.repository.BackendAccountRepository
 import com.github.infrastructure.core.web.exception.BusinessException
+import com.github.infrastructure.security.auth.LoginMode
 import com.github.infrastructure.security.password.PasswordHasher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
@@ -17,7 +22,7 @@ class BackendAccountService(
 ) {
     @Transactional
     fun create(request: CreateBackendAccountRequest): BackendAccountResponse {
-        if (accountRepository.findForLogin(com.github.infrastructure.security.auth.LoginMode.USERNAME, request.username) != null) {
+        if (accountRepository.findForLogin(LoginMode.USERNAME, request.username) != null) {
             throw BusinessException(HttpStatus.CONFLICT.value(), "backend username already exists", HttpStatus.CONFLICT)
         }
         val accountId = UUID.randomUUID()
