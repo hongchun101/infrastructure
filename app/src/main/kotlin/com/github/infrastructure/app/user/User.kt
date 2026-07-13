@@ -2,6 +2,7 @@ package com.github.infrastructure.app.user
 
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
+import org.babyfish.jimmer.sql.OneToMany
 import org.babyfish.jimmer.sql.Table
 import java.time.LocalDateTime
 import java.util.UUID
@@ -18,4 +19,7 @@ interface User {
     val displayName: String
     val enabled: Boolean
     val createdTime: LocalDateTime
+
+    @OneToMany(mappedBy = "user")
+    val userRoles: List<UserRole>
 }

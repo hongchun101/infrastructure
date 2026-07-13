@@ -2,239 +2,144 @@ package com.github.infrastructure.app.dictionary
 
 import com.github.infrastructure.core.web.exception.BusinessException
 import org.springframework.http.HttpStatus
-import org.springframework.jdbc.core.simple.JdbcClient
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.sql.ResultSet
 import java.time.Clock
 import java.time.LocalDateTime
 import java.util.UUID
 
 @Service
 class DictionaryService(
-    private val jdbcClient: JdbcClient,
+    private val categoryRepository: DictionaryCategoryRepository,
+    private val itemRepository: DictionaryItemRepository,
     private val clock: Clock,
 ) {
     @Transactional
     fun createCategory(request: CreateDictionaryCategoryRequest): DictionaryCategoryResponse {
-        val existing = jdbcClient.sql("select id from dictionary_categories where code = :code")
-            .param("code", request.code)
-            .query(UUID::class.java)
-            .optional()
-        if (existing.isPresent) {
+        if (categoryRepository.findByCode(request.code) != null) {
             throw BusinessException(HttpStatus.CONFLICT.value(), "category code already exists", HttpStatus.CONFLICT)
         }
-        val id = UUID.randomUUID()
         val createdTime = LocalDateTime.now(clock)
-        jdbcClient.sql(
-            """
-            insert into dictionary_categories (id, code, name, description, enabled, created_time)
-            values (:id, :code, :name, :description, :enabled, :createdTime)
-            """.trimIndent(),
+        val category = categoryRepository.save(
+            DictionaryCategory {
+                id = UUID.randomUUID()
+                code = request.code
+                name = request.name
+                description = request.description
+                enabled = request.enabled
+                this.createdTime = createdTime
+            },
         )
-            .param("id", id)
-            .param("code", request.code)
-            .param("name", request.name)
-            .param("description", request.description)
-            .param("enabled", request.enabled)
-            .param("createdTime", createdTime)
-            .update()
-        return DictionaryCategoryResponse(id, request.code, request.name, request.description, request.enabled, createdTime)
+        return category.toResponse()
     }
 
-    fun listCategories(): List<DictionaryCategoryResponse> = jdbcClient.sql(
-        """
-        select id, code, name, description, enabled, created_time
-        from dictionary_categories
-        order by code
-        """.trimIndent(),
-    )
-        .query(::mapCategory)
-        .list()
+    fun listCategories(): List<DictionaryCategoryResponse> =
+        categoryRepository.findAllOrderedByCode().map { it.toResponse() }
 
-    fun getCategory(id: UUID): DictionaryCategoryResponse = jdbcClient.sql(
-        """
-        select id, code, name, description, enabled, created_time
-        from dictionary_categories
-        where id = :id
-        """.trimIndent(),
-    )
-        .param("id", id)
-        .query(::mapCategory)
-        .optional()
-        .orElseThrow { notFound("category") }
+    fun getCategory(id: UUID): DictionaryCategoryResponse =
+        categoryRepository.findById(id)?.toResponse()
+            ?: throw notFound("category")
 
-    fun getCategoryByCode(code: String): DictionaryCategoryResponse = jdbcClient.sql(
-        """
-        select id, code, name, description, enabled, created_time
-        from dictionary_categories
-        where code = :code
-        """.trimIndent(),
-    )
-        .param("code", code)
-        .query(::mapCategory)
-        .optional()
-        .orElseThrow { notFound("category") }
+    fun getCategoryByCode(code: String): DictionaryCategoryResponse =
+        categoryRepository.findByCode(code)?.toResponse()
+            ?: throw notFound("category")
 
     @Transactional
     fun updateCategory(id: UUID, request: UpdateDictionaryCategoryRequest): DictionaryCategoryResponse {
-        val updated = jdbcClient.sql(
-            """
-            update dictionary_categories
-            set name = :name, description = :description, enabled = :enabled
-            where id = :id
-            """.trimIndent(),
+        val current = categoryRepository.findById(id) ?: throw notFound("category")
+        val updated = categoryRepository.save(
+            DictionaryCategory {
+                this.id = current.id
+                code = current.code
+                name = request.name
+                description = request.description
+                enabled = request.enabled
+                createdTime = current.createdTime
+            },
         )
-            .param("id", id)
-            .param("name", request.name)
-            .param("description", request.description)
-            .param("enabled", request.enabled)
-            .update()
-        if (updated == 0) {
-            throw notFound("category")
-        }
-        return getCategory(id)
+        return updated.toResponse()
     }
 
     @Transactional
     fun deleteCategory(id: UUID) {
-        val deleted = jdbcClient.sql("delete from dictionary_categories where id = :id")
-            .param("id", id)
-            .update()
-        if (deleted == 0) {
-            throw notFound("category")
-        }
+        if (categoryRepository.findById(id) == null) throw notFound("category")
+        itemRepository.deleteByCategoryId(id)
+        categoryRepository.deleteById(id)
     }
 
     @Transactional
     fun createItem(categoryCode: String, request: CreateDictionaryItemRequest): DictionaryItemResponse {
-        val category = getCategoryByCode(categoryCode)
+        val category = categoryRepository.findByCode(categoryCode) ?: throw notFound("category")
         request.parentId?.let { validateParent(request.parentId, category.id) }
-        if (itemCodeExists(category.id, request.code)) {
+        if (itemRepository.existsByCategoryIdAndCode(category.id, request.code)) {
             throw BusinessException(HttpStatus.CONFLICT.value(), "item code already exists in category", HttpStatus.CONFLICT)
         }
-        val id = UUID.randomUUID()
         val createdTime = LocalDateTime.now(clock)
-        jdbcClient.sql(
-            """
-            insert into dictionary_items (id, category_id, code, name, parent_id, sort_order, enabled, created_time)
-            values (:id, :categoryId, :code, :name, :parentId, :sortOrder, :enabled, :createdTime)
-            """.trimIndent(),
+        val item = itemRepository.save(
+            DictionaryItem {
+                id = UUID.randomUUID()
+                categoryId = category.id
+                code = request.code
+                name = request.name
+                parentId = request.parentId
+                sortOrder = request.sortOrder
+                enabled = request.enabled
+                this.createdTime = createdTime
+            },
         )
-            .param("id", id)
-            .param("categoryId", category.id)
-            .param("code", request.code)
-            .param("name", request.name)
-            .param("parentId", request.parentId)
-            .param("sortOrder", request.sortOrder)
-            .param("enabled", request.enabled)
-            .param("createdTime", createdTime)
-            .update()
-        return DictionaryItemResponse(
-            id = id,
-            categoryId = category.id,
-            code = request.code,
-            name = request.name,
-            parentId = request.parentId,
-            sortOrder = request.sortOrder,
-            enabled = request.enabled,
-            createdTime = createdTime,
-        )
+        return item.toResponse()
     }
 
     fun listItems(categoryCode: String, parentId: UUID?): List<DictionaryItemResponse> {
-        val category = getCategoryByCode(categoryCode)
-        val sql = if (parentId == null) {
-            """
-            select id, category_id, code, name, parent_id, sort_order, enabled, created_time
-            from dictionary_items
-            where category_id = :categoryId and parent_id is null
-            order by sort_order, code
-            """.trimIndent()
+        val category = categoryRepository.findByCode(categoryCode) ?: throw notFound("category")
+        val items = if (parentId == null) {
+            itemRepository.findRootByCategoryId(category.id)
         } else {
-            """
-            select id, category_id, code, name, parent_id, sort_order, enabled, created_time
-            from dictionary_items
-            where category_id = :categoryId and parent_id = :parentId
-            order by sort_order, code
-            """.trimIndent()
+            itemRepository.findByCategoryIdAndParentId(category.id, parentId)
         }
-        val query = jdbcClient.sql(sql).param("categoryId", category.id)
-        if (parentId != null) query.param("parentId", parentId)
-        return query.query(::mapItem).list()
+        return items.map { it.toResponse() }
     }
 
     @Transactional
     fun updateItem(itemId: UUID, request: UpdateDictionaryItemRequest): DictionaryItemResponse {
-        val item = getItemOrThrow(itemId)
-        request.parentId?.let { validateParent(it, item.categoryId, excludeItemId = item.id) }
-        val updated = jdbcClient.sql(
-            """
-            update dictionary_items
-            set name = :name, parent_id = :parentId, sort_order = :sortOrder, enabled = :enabled
-            where id = :id
-            """.trimIndent(),
+        val current = itemRepository.findById(itemId) ?: throw notFound("item")
+        request.parentId?.let { validateParent(it, current.categoryId, excludeItemId = current.id) }
+        val updated = itemRepository.save(
+            DictionaryItem {
+                id = current.id
+                categoryId = current.categoryId
+                code = current.code
+                name = request.name
+                parentId = request.parentId
+                sortOrder = request.sortOrder
+                enabled = request.enabled
+                createdTime = current.createdTime
+            },
         )
-            .param("id", itemId)
-            .param("name", request.name)
-            .param("parentId", request.parentId)
-            .param("sortOrder", request.sortOrder)
-            .param("enabled", request.enabled)
-            .update()
-        if (updated == 0) {
-            throw notFound("item")
-        }
-        return getItemOrThrow(itemId)
+        return updated.toResponse()
     }
 
     @Transactional
     fun deleteItem(itemId: UUID) {
-        val item = getItemOrThrow(itemId)
-        val children = jdbcClient.sql("select count(*) from dictionary_items where parent_id = :parentId")
-            .param("parentId", item.id)
-            .query(Int::class.java)
-            .single()
-        if (children > 0) {
+        val item = itemRepository.findById(itemId) ?: throw notFound("item")
+        if (itemRepository.countChildrenOf(item.id) > 0) {
             throw BusinessException(
                 HttpStatus.CONFLICT.value(),
                 "item has child entries; delete children first",
                 HttpStatus.CONFLICT,
             )
         }
-        jdbcClient.sql("delete from dictionary_items where id = :id")
-            .param("id", itemId)
-            .update()
+        itemRepository.deleteById(item.id)
     }
 
-    private fun getItemOrThrow(itemId: UUID): DictionaryItemResponse = jdbcClient.sql(
-        """
-        select id, category_id, code, name, parent_id, sort_order, enabled, created_time
-        from dictionary_items
-        where id = :id
-        """.trimIndent(),
-    )
-        .param("id", itemId)
-        .query(::mapItem)
-        .optional()
-        .orElseThrow { notFound("item") }
-
     private fun validateParent(parentId: UUID, expectedCategoryId: UUID, excludeItemId: UUID? = null) {
-        val parent = jdbcClient.sql(
-            """
-            select category_id from dictionary_items where id = :id
-            """.trimIndent(),
-        )
-            .param("id", parentId)
-            .query(UUID::class.java)
-            .optional()
-            .orElseThrow {
-                BusinessException(
-                    HttpStatus.BAD_REQUEST.value(),
-                    "parent item not found",
-                    HttpStatus.BAD_REQUEST,
-                )
-            }
-        if (parent != expectedCategoryId) {
+        val parentCategoryId = itemRepository.findParentCategoryId(parentId)
+            ?: throw BusinessException(
+                HttpStatus.BAD_REQUEST.value(),
+                "parent item not found",
+                HttpStatus.BAD_REQUEST,
+            )
+        if (parentCategoryId != expectedCategoryId) {
             throw BusinessException(
                 HttpStatus.BAD_REQUEST.value(),
                 "parent item belongs to a different category",
@@ -250,37 +155,26 @@ class DictionaryService(
         }
     }
 
-    private fun itemCodeExists(categoryId: UUID, code: String): Boolean = jdbcClient.sql(
-        """
-        select 1 from dictionary_items where category_id = :categoryId and code = :code
-        """.trimIndent(),
-    )
-        .param("categoryId", categoryId)
-        .param("code", code)
-        .query(Int::class.java)
-        .optional()
-        .isPresent
-
     private fun notFound(resource: String): BusinessException =
         BusinessException(HttpStatus.NOT_FOUND.value(), "$resource not found", HttpStatus.NOT_FOUND)
 
-    private fun mapCategory(rs: ResultSet, rowNumber: Int): DictionaryCategoryResponse = DictionaryCategoryResponse(
-        id = rs.getObject("id", UUID::class.java),
-        code = rs.getString("code"),
-        name = rs.getString("name"),
-        description = rs.getString("description"),
-        enabled = rs.getBoolean("enabled"),
-        createdTime = rs.getTimestamp("created_time").toLocalDateTime(),
+    private fun DictionaryCategory.toResponse(): DictionaryCategoryResponse = DictionaryCategoryResponse(
+        id = id,
+        code = code,
+        name = name,
+        description = description,
+        enabled = enabled,
+        createdTime = createdTime,
     )
 
-    private fun mapItem(rs: ResultSet, rowNumber: Int): DictionaryItemResponse = DictionaryItemResponse(
-        id = rs.getObject("id", UUID::class.java),
-        categoryId = rs.getObject("category_id", UUID::class.java),
-        code = rs.getString("code"),
-        name = rs.getString("name"),
-        parentId = rs.getObject("parent_id", UUID::class.java),
-        sortOrder = rs.getInt("sort_order"),
-        enabled = rs.getBoolean("enabled"),
-        createdTime = rs.getTimestamp("created_time").toLocalDateTime(),
+    private fun DictionaryItem.toResponse(): DictionaryItemResponse = DictionaryItemResponse(
+        id = id,
+        categoryId = categoryId,
+        code = code,
+        name = name,
+        parentId = parentId,
+        sortOrder = sortOrder,
+        enabled = enabled,
+        createdTime = createdTime,
     )
 }
