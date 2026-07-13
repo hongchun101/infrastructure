@@ -30,7 +30,7 @@ interface DictionaryItem {
 
     @ManyToOne
     @JoinColumn(name = "parent_id")
-    @OnDissociate(DissociateAction.RESTRICT)
+    @OnDissociate(DissociateAction.CHECK)
     val parent: DictionaryItem?
 
     @IdView("parent")

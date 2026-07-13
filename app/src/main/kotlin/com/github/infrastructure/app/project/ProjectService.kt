@@ -24,7 +24,7 @@ class ProjectService(
                 ownerId = user.id
                 this.createdTime = createdTime
             },
-        )
+        ).modifiedEntity
         return project.toResponse()
     }
 

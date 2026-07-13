@@ -14,7 +14,7 @@ data class OperationLogResponse(
     val method: String,
     val path: String,
     val queryString: String?,
-    val responseStatus: Int,
+    val responseStatus: Int?,
     val errorMessage: String?,
     val clientIp: String?,
     val userAgent: String?,

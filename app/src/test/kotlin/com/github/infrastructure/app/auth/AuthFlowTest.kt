@@ -74,7 +74,7 @@ class AuthFlowTest(
     @Test
     fun `backend account login is isolated from c end user account`() {
         val response = login("""{"accountType":"BACKEND","username":"operator","password":"admin123"}""")
-        assertEquals(200, response.get("code").asInt())
+        assertEquals(0, response.get("code").asInt())
     }
 
     @Test

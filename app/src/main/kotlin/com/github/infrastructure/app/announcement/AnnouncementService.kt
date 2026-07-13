@@ -33,8 +33,8 @@ class AnnouncementService(
                 createdTime = now
                 updatedTime = now
             },
-        )
-        return announcement.toResponse(readCount = 0, readByMe = false)
+        ).modifiedEntity
+        return announcement.toResponse(readCount = 0L, readByMe = false)
     }
 
     fun list(
@@ -99,14 +99,14 @@ class AnnouncementService(
                 createdTime = current.createdTime
                 updatedTime = now
             },
-        )
-        return getOrThrow(saved.id)
+        ).modifiedEntity
+        return getOrThrow(saved.id, user.id)
     }
 
     @Transactional
     fun publish(id: UUID, user: AuthenticatedUser): AnnouncementResponse {
         val current = findOneOrThrow(id).first
-        if (current.status == AnnouncementStatus.PUBLISHED.name) return getOrThrow(id)
+        if (current.status == AnnouncementStatus.PUBLISHED.name) return getOrThrow(id, user.id)
         if (current.status == AnnouncementStatus.ARCHIVED.name) {
             throw BusinessException(
                 HttpStatus.CONFLICT.value(),
@@ -115,14 +115,15 @@ class AnnouncementService(
             )
         }
         val now = LocalDateTime.now(clock)
-        if (current.publishAt != null && current.publishAt.isAfter(now)) {
+        val scheduledPublishAt = current.publishAt
+        if (scheduledPublishAt != null && scheduledPublishAt.isAfter(now)) {
             throw BusinessException(
                 HttpStatus.CONFLICT.value(),
                 "scheduled publish time has not been reached",
                 HttpStatus.CONFLICT,
             )
         }
-        val publishedAt = current.publishAt ?: now
+        val newPublishedAt = scheduledPublishAt ?: now
         announcementRepository.save(
             Announcement {
                 this.id = current.id
@@ -130,7 +131,7 @@ class AnnouncementService(
                 summary = current.summary
                 content = current.content
                 priority = current.priority
-                publishedAt = publishedAt
+                publishedAt = newPublishedAt
                 publishAt = current.publishAt
                 createdBy = current.createdBy
                 updatedBy = user.id
@@ -139,13 +140,13 @@ class AnnouncementService(
                 updatedTime = now
             },
         )
-        return getOrThrow(id)
+        return getOrThrow(id, user.id)
     }
 
     @Transactional
     fun archive(id: UUID, user: AuthenticatedUser): AnnouncementResponse {
         val current = findOneOrThrow(id).first
-        if (current.status == AnnouncementStatus.ARCHIVED.name) return getOrThrow(id)
+        if (current.status == AnnouncementStatus.ARCHIVED.name) return getOrThrow(id, user.id)
         val now = LocalDateTime.now(clock)
         announcementRepository.save(
             Announcement {
@@ -163,7 +164,7 @@ class AnnouncementService(
                 updatedTime = now
             },
         )
-        return getOrThrow(id)
+        return getOrThrow(id, user.id)
     }
 
     @Transactional
@@ -193,7 +194,7 @@ class AnnouncementService(
                 updatedTime = now
             },
         )
-        return getOrThrow(id)
+        return getOrThrow(id, user.id)
     }
 
     @Transactional
@@ -223,7 +224,7 @@ class AnnouncementService(
                 updatedTime = now
             },
         )
-        return getOrThrow(id)
+        return getOrThrow(id, user.id)
     }
 
     @Transactional
@@ -238,7 +239,7 @@ class AnnouncementService(
         }
         val now = LocalDateTime.now(clock)
         announcementReadRepository.markRead(current.id, user.id, now)
-        return getOrThrow(id)
+        return getOrThrow(id, user.id)
     }
 
     @Transactional
@@ -254,21 +255,22 @@ class AnnouncementService(
         announcementRepository.deleteById(id)
     }
 
-    private fun findOneOrThrow(id: UUID): Pair<Announcement, Int> {
+    private fun findOneOrThrow(id: UUID): Pair<Announcement, Long> {
         val announcement = announcementRepository.findById(id) ?: throw notFound()
-        val readCount = announcementRepository.countReadsByAnnouncementIds(listOf(id))[id] ?: 0
+        val readCount = announcementRepository.countReadsByAnnouncementIds(listOf(id))[id] ?: 0L
         return announcement to readCount
     }
 
-    private fun getOrThrow(id: UUID): AnnouncementResponse {
+    private fun getOrThrow(id: UUID, userId: UUID?): AnnouncementResponse {
         val (announcement, readCount) = findOneOrThrow(id)
-        return announcement.toResponse(readCount = readCount, readByMe = false)
+        val readByMe = userId?.let { announcementRepository.existsReadByUser(id, it) } ?: false
+        return announcement.toResponse(readCount = readCount, readByMe = readByMe)
     }
 
     private fun notFound(): BusinessException =
         BusinessException(HttpStatus.NOT_FOUND.value(), "announcement not found", HttpStatus.NOT_FOUND)
 
-    private fun Announcement.toResponse(readCount: Int, readByMe: Boolean): AnnouncementResponse =
+    private fun Announcement.toResponse(readCount: Long, readByMe: Boolean): AnnouncementResponse =
         AnnouncementResponse(
             id = id,
             title = title,

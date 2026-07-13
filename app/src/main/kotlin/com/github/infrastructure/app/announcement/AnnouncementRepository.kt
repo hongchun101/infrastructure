@@ -7,10 +7,10 @@ import org.babyfish.jimmer.sql.kt.ast.expression.count
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.eq
 import org.babyfish.jimmer.sql.kt.ast.expression.ilike
-import org.babyfish.jimmer.sql.kt.ast.expression.notIn
 import org.babyfish.jimmer.sql.kt.ast.expression.or
 import org.babyfish.jimmer.sql.kt.ast.expression.value
 import org.babyfish.jimmer.sql.kt.ast.expression.valueIn
+import org.babyfish.jimmer.sql.kt.ast.expression.valueNotIn
 import org.springframework.stereotype.Repository
 import java.util.UUID
 
@@ -25,11 +25,11 @@ class AnnouncementRepository(sql: KSqlClient) : AbstractKotlinRepository<Announc
         if (status != null) where(table.status eq status)
         if (!keyword.isNullOrBlank()) {
             val pattern = "%${keyword.lowercase()}%"
-            where((table.title ilike pattern) or (coalesce(table.summary, value("")) ilike pattern))
+            where(or(table.title ilike pattern, table.summary ilike pattern))
         }
         if (unreadOnly && viewerId != null) {
             where(
-                table.id notIn subQuery(AnnouncementRead::class) {
+                table.id valueNotIn subQuery(AnnouncementRead::class) {
                     where(table.userId eq viewerId)
                     select(table.announcementId)
                 },
@@ -39,7 +39,7 @@ class AnnouncementRepository(sql: KSqlClient) : AbstractKotlinRepository<Announc
         select(table)
     }
 
-    fun countReadsByAnnouncementIds(announcementIds: Collection<UUID>): Map<UUID, Int> {
+    fun countReadsByAnnouncementIds(announcementIds: Collection<UUID>): Map<UUID, Long> {
         if (announcementIds.isEmpty()) return emptyMap()
         return sql.createQuery(AnnouncementRead::class) {
             where(table.announcementId valueIn announcementIds)

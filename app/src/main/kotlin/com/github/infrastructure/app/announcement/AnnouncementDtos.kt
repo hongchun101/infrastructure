@@ -48,7 +48,7 @@ data class AnnouncementResponse(
     val priority: Int,
     val publishedAt: LocalDateTime?,
     val publishAt: LocalDateTime?,
-    val readCount: Int,
+    val readCount: Long,
     val readByMe: Boolean,
     val createdBy: UUID,
     val updatedBy: UUID,

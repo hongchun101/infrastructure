@@ -29,7 +29,7 @@ class DictionaryService(
                 enabled = request.enabled
                 this.createdTime = createdTime
             },
-        )
+        ).modifiedEntity
         return category.toResponse()
     }
 
@@ -56,7 +56,7 @@ class DictionaryService(
                 enabled = request.enabled
                 createdTime = current.createdTime
             },
-        )
+        ).modifiedEntity
         return updated.toResponse()
     }
 
@@ -86,7 +86,7 @@ class DictionaryService(
                 enabled = request.enabled
                 this.createdTime = createdTime
             },
-        )
+        ).modifiedEntity
         return item.toResponse()
     }
 
@@ -115,7 +115,7 @@ class DictionaryService(
                 enabled = request.enabled
                 createdTime = current.createdTime
             },
-        )
+        ).modifiedEntity
         return updated.toResponse()
     }
 
