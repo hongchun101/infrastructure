@@ -91,7 +91,21 @@ class SecurityAutoConfiguration {
         .csrf { it.disable() }
         .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
         .authorizeHttpRequests {
-            it.requestMatchers("/auth/login", "/auth/refresh", "/actuator/health", "/error").permitAll()
+            it.requestMatchers(
+                "/auth/login",
+                "/auth/refresh",
+                "/actuator/health",
+                "/actuator/health/**",
+                "/actuator/info",
+                "/actuator/prometheus",
+                "/actuator/metrics",
+                "/actuator/metrics/**",
+                "/v3/api-docs/**",
+                "/swagger-ui.html",
+                "/swagger-ui/**",
+                "/webjars/**",
+                "/error",
+            ).permitAll()
             it.anyRequest().authenticated()
         }
         .exceptionHandling {
