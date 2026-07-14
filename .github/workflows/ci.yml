@@ -1,0 +1,80 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2g"
+
+jobs:
+  build:
+    name: build-and-test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: infrastructure
+          POSTGRES_USER: infrastructure
+          POSTGRES_PASSWORD: infrastructure
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U infrastructure"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: setup jdk 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+
+      - name: grant execute to gradlew
+        shell: bash
+        run: chmod +x ./gradlew
+
+      - name: compile main + test sources
+        shell: bash
+        run: ./gradlew --no-daemon compileKotlin compileTestKotlin
+
+      - name: architecture test (archunit, no docker needed)
+        shell: bash
+        run: ./gradlew --no-daemon :app:test --tests "com.github.infrastructure.app.ArchitectureTest"
+
+      - name: integration smoke test (testcontainers + service containers)
+        shell: bash
+        run: ./gradlew --no-daemon :app:test --tests "com.github.infrastructure.app.support.ContainerBackedApplicationContextTest"
+        env:
+          DOCKER_HOST: unix:///var/run/docker.sock
+
+      - name: full test suite
+        shell: bash
+        run: ./gradlew --no-daemon test
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/infrastructure
+          SPRING_DATASOURCE_USERNAME: infrastructure
+          SPRING_DATASOURCE_PASSWORD: infrastructure
+          SPRING_DATA_REDIS_HOST: localhost
+          SPRING_DATA_REDIS_PORT: 6379
