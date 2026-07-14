@@ -7,6 +7,7 @@ import com.github.infrastructure.security.password.PasswordHasher
 import com.github.infrastructure.security.permission.PermissionChecker
 import com.github.infrastructure.security.repository.SecurityUserAccountRepository
 import com.github.infrastructure.security.service.AuthService
+import com.github.infrastructure.security.service.LoginRateLimiter
 import com.github.infrastructure.security.token.RedisTokenSessionRepository
 import com.github.infrastructure.security.token.TokenSession
 import com.github.infrastructure.security.token.TokenSessionRepository
@@ -73,7 +74,16 @@ class SecurityAutoConfiguration {
         passwordHasher: PasswordHasher,
         properties: SecurityProperties,
         clock: Clock,
-    ): AuthService = AuthService(userAccountRepository, tokenSessionRepository, tokenGenerator, passwordHasher, properties, clock)
+        loginRateLimiter: LoginRateLimiter,
+    ): AuthService = AuthService(
+        userAccountRepository,
+        tokenSessionRepository,
+        tokenGenerator,
+        passwordHasher,
+        properties,
+        clock,
+        loginRateLimiter,
+    )
     @Bean
     @ConditionalOnMissingBean
     fun authController(authService: AuthService): AuthController = AuthController(authService)

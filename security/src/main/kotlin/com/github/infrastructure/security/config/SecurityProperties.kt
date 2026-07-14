@@ -7,4 +7,11 @@ import java.time.Duration
 data class SecurityProperties(
     val accessTokenTtl: Duration = Duration.ofMinutes(30),
     val refreshTokenTtl: Duration = Duration.ofDays(7),
-)
+    val loginRateLimit: LoginRateLimit = LoginRateLimit(),
+) {
+    data class LoginRateLimit(
+        val maxAttemptsPerPrincipal: Int = 10,
+        val window: Duration = Duration.ofMinutes(5),
+        val enabled: Boolean = true,
+    )
+}

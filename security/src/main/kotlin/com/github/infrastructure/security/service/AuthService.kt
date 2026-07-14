@@ -26,16 +26,21 @@ class AuthService(
     private val passwordHasher: PasswordHasher,
     private val properties: SecurityProperties,
     private val clock: Clock,
+    private val loginRateLimiter: LoginRateLimiter,
 ) {
     fun login(request: LoginRequest): TokenPair {
         val principal = request.principal ?: request.username
         if (principal.isNullOrBlank()) {
             throw unauthorized()
         }
-        val account = userAccountRepository.findForLogin(request.accountType, request.mode, principal) ?: throw unauthorized()
-        if (!account.enabled || !passwordHasher.matches(request.password, account.passwordHash)) {
+        if (!loginRateLimiter.isAllowed(principal)) {
             throw unauthorized()
         }
+        val account = userAccountRepository.findForLogin(request.accountType, request.mode, principal)
+        if (account == null || !account.enabled || !passwordHasher.matches(request.password, account.passwordHash)) {
+            throw unauthorized()
+        }
+        loginRateLimiter.recordSuccess(principal)
         return createSession(account.toAuthenticatedUser())
     }
     fun refresh(request: RefreshTokenRequest): TokenPair {
