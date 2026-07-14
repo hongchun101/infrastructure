@@ -2,6 +2,7 @@ package com.github.infrastructure.app.dictionary.entity
 
 import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
+import org.babyfish.jimmer.sql.LogicalDeleted
 import org.babyfish.jimmer.sql.Table
 import java.time.LocalDateTime
 import java.util.UUID
@@ -16,4 +17,7 @@ interface DictionaryCategory {
     val description: String?
     val enabled: Boolean
     val createdTime: LocalDateTime
+
+    @LogicalDeleted
+    val deletedAt: LocalDateTime?
 }

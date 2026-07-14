@@ -5,6 +5,7 @@ import org.babyfish.jimmer.sql.Entity
 import org.babyfish.jimmer.sql.Id
 import org.babyfish.jimmer.sql.IdView
 import org.babyfish.jimmer.sql.JoinColumn
+import org.babyfish.jimmer.sql.LogicalDeleted
 import org.babyfish.jimmer.sql.ManyToOne
 import org.babyfish.jimmer.sql.Table
 import java.time.LocalDateTime
@@ -25,4 +26,7 @@ interface Project {
     val ownerId: UUID
 
     val createdTime: LocalDateTime
+
+    @LogicalDeleted
+    val deletedAt: LocalDateTime?
 }
