@@ -9,6 +9,7 @@ import org.babyfish.jimmer.sql.kt.ast.expression.and
 import org.babyfish.jimmer.sql.kt.ast.expression.desc
 import org.babyfish.jimmer.sql.kt.ast.expression.`eq?`
 import org.babyfish.jimmer.sql.kt.ast.expression.`ge?`
+import org.babyfish.jimmer.sql.kt.ast.expression.`lt?`
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import java.util.UUID
@@ -46,6 +47,17 @@ class AlertEventRepository(sql: KSqlClient) : AbstractKotlinRepository<AlertEven
     fun findRecentlyActive(fromTime: LocalDateTime): List<AlertEvent> = executeQuery {
         where(table.lastSeenAt `ge?` fromTime)
         orderBy(table.lastSeenAt.desc())
+        select(table)
+    }
+
+    fun findIdleUnresolved(before: LocalDateTime): List<AlertEvent> = executeQuery {
+        where(
+            and(
+                table.resolved `eq?` false,
+                table.lastSeenAt `lt?` before,
+            ),
+        )
+        orderBy(table.lastSeenAt)
         select(table)
     }
 }
