@@ -1,0 +1,17 @@
+.gradle/
+build/
+.idea/
+.vscode/
+.kotlin/
+out/
+*.iml
+.DS_Store
+.git/
+.github/
+.gitignore
+.gitattributes
+*.md
+src/test/
+docker-compose*.yml
+Dockerfile
+.dockerignore
