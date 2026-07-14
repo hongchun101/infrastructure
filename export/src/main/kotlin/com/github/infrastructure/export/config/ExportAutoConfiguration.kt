@@ -1,0 +1,8 @@
+package com.github.infrastructure.export.config
+
+import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+
+@AutoConfiguration
+@EnableConfigurationProperties(ExportProperties::class)
+class ExportAutoConfiguration

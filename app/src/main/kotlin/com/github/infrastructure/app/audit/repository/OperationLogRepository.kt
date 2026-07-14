@@ -39,4 +39,49 @@ class OperationLogRepository(sql: KSqlClient) : AbstractKotlinRepository<Operati
         orderBy(table.createdTime.desc(), table.id.desc())
         select(table)
     }.fetchPage(pageIndex, pageSize)
+
+    fun listForExport(
+        module: String?,
+        action: String?,
+        userId: UUID?,
+        success: Boolean?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
+        offset: Int,
+        limit: Int,
+    ): List<OperationLogEntry> = createQuery {
+        where(
+            and(
+                table.module `eq?` module?.takeIf { it.isNotBlank() },
+                table.action `eq?` action?.takeIf { it.isNotBlank() },
+                table.userId `eq?` userId,
+                table.success `eq?` success,
+                table.createdTime `ge?` startTime,
+                table.createdTime `lt?` endTime,
+            ),
+        )
+        orderBy(table.createdTime.desc(), table.id.desc())
+        select(table).limit(limit.coerceAtLeast(1)).offset(offset.coerceAtLeast(0).toLong())
+    }.execute()
+
+    fun countForExport(
+        module: String?,
+        action: String?,
+        userId: UUID?,
+        success: Boolean?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
+    ): Long = createQuery {
+        where(
+            and(
+                table.module `eq?` module?.takeIf { it.isNotBlank() },
+                table.action `eq?` action?.takeIf { it.isNotBlank() },
+                table.userId `eq?` userId,
+                table.success `eq?` success,
+                table.createdTime `ge?` startTime,
+                table.createdTime `lt?` endTime,
+            ),
+        )
+        selectCount()
+    }.fetchUnlimitedCount()
 }
