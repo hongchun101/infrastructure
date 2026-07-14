@@ -6,10 +6,12 @@ import com.github.infrastructure.app.announcement.dto.ScheduleAnnouncementReques
 import com.github.infrastructure.app.announcement.dto.UpdateAnnouncementRequest
 import com.github.infrastructure.app.announcement.entity.Announcement
 import com.github.infrastructure.app.announcement.entity.AnnouncementStatus
+import com.github.infrastructure.app.announcement.event.AnnouncementPublishedEvent
 import com.github.infrastructure.app.announcement.repository.AnnouncementReadRepository
 import com.github.infrastructure.app.announcement.repository.AnnouncementRepository
 import com.github.infrastructure.core.web.exception.BusinessException
 import com.github.infrastructure.security.context.AuthenticatedUser
+import org.springframework.context.ApplicationEventPublisher
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -22,6 +24,7 @@ class AnnouncementService(
     private val announcementRepository: AnnouncementRepository,
     private val announcementReadRepository: AnnouncementReadRepository,
     private val clock: Clock,
+    private val eventPublisher: ApplicationEventPublisher,
 ) {
     @Transactional
     fun create(request: CreateAnnouncementRequest, user: AuthenticatedUser): AnnouncementResponse {
@@ -147,6 +150,16 @@ class AnnouncementService(
                 status = AnnouncementStatus.PUBLISHED.name
                 updatedTime = now
             },
+        )
+        eventPublisher.publishEvent(
+            AnnouncementPublishedEvent(
+                announcementId = current.id,
+                title = current.title,
+                summary = current.summary,
+                content = current.content,
+                priority = current.priority,
+                publishedByName = user.displayName,
+            ),
         )
         return getOrThrow(id, user.id)
     }
