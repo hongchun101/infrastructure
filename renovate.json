@@ -1,0 +1,79 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    ":automergeMinor",
+    ":automergePatch"
+  ],
+  "schedule": [
+    "before 6am on monday"
+  ],
+  "timezone": "Asia/Shanghai",
+  "labels": ["dependencies"],
+  "reviewers": ["hongchun101"],
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security"],
+    "assignees": ["hongchun101"]
+  },
+  "packageRules": [
+    {
+      "description": "Pin major Spring Boot / Kotlin / Gradle versions; let renovate bump minor+patch",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": [
+        "org.springframework.boot",
+        "org.springframework.boot:spring-boot-dependencies",
+        "org.jetbrains.kotlin",
+        "org.jetbrains.kotlin:kotlin-gradle-plugin",
+        "com.google.devtools.ksp"
+      ],
+      "matchUpdateTypes": ["major"],
+      "enabled": false
+    },
+    {
+      "description": "Spring Boot dependency-management BOM updates",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": ["org.springframework.boot:spring-boot-dependencies"],
+      "automerge": true,
+      "labels": ["dependencies", "spring-boot"]
+    },
+    {
+      "description": "GitHub Actions: keep patches, defer majors",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Logback / Jackson / Jimmer: fast-track patch versions (security + bug fixes)",
+      "matchManagers": ["gradle"],
+      "matchPackageNames": [
+        "net.logstash.logback:logstash-logback-encoder",
+        "com.fasterxml.jackson.core:jackson-databind",
+        "org.babyfish.jimmer:jimmer-spring-boot-starter",
+        "org.babyfish.jimmer:jimmer-ksp"
+      ],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "Dockerfile base images: weekly bump with auto-merge for patches",
+      "matchManagers": ["dockerfile"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true
+    },
+    {
+      "description": "Docker compose services: track latest major versions (postgres, redis, mailhog)",
+      "matchManagers": ["docker-compose"],
+      "matchUpdateTypes": ["major"],
+      "labels": ["dependencies", "breaking"]
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 6am on monday"]
+  },
+  "ignorePaths": [
+    ".github/workflows/ci.yml"
+  ]
+}
