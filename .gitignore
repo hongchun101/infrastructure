@@ -7,3 +7,8 @@ core/build/
 out/
 .worktrees/
 .DS_Store
+# Eclipse
+.project
+.settings/
+.classpath
+
