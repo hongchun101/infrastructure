@@ -114,6 +114,9 @@ class SecurityAutoConfiguration {
                 "/swagger-ui.html",
                 "/swagger-ui/**",
                 "/webjars/**",
+                // Local filestore transfer: clients PUT/GET here using HMAC tokens,
+                // never bearer tokens. S3-compatible providers bypass this entirely.
+                "/api/files/transfer/**",
                 "/error",
             ).permitAll()
             it.anyRequest().authenticated()
