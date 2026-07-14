@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.github.infrastructure.alert.channel.AlertChannel
 import com.github.infrastructure.alert.channel.AlertChannelRegistry
 import com.github.infrastructure.alert.channel.ChannelSendOutcome
+import com.github.infrastructure.alert.config.AlertProperties
 import com.github.infrastructure.alert.dto.AlertRuleChannelSpec
 import com.github.infrastructure.alert.entity.AlertChannelType
 import com.github.infrastructure.alert.entity.AlertEvent
@@ -28,6 +29,7 @@ class AlertDispatchService(
     private val notificationRepository: AlertNotificationRepository,
     private val channelRegistry: AlertChannelRegistry,
     private val objectMapper: ObjectMapper,
+    private val properties: AlertProperties,
     private val clock: Clock,
 ) {
     private val log = LoggerFactory.getLogger(javaClass)
@@ -48,14 +50,50 @@ class AlertDispatchService(
                 return@forEach
             }
             val payload = buildPayload(rule, freshEvent)
-            val outcome = try {
-                channel.send(spec.target, payload)
-            } catch (e: Exception) {
-                ChannelSendOutcome(httpStatus = null, errorMessage = e.message?.take(2000))
-            }
+            val outcome = sendWithRetry(channel, spec.target, payload, spec)
             saveNotification(freshEvent, spec, outcome)
         }
     }
+
+    private fun sendWithRetry(
+        channel: AlertChannel,
+        target: String,
+        payload: ObjectNode,
+        spec: AlertRuleChannelSpec,
+    ): ChannelSendOutcome {
+        val retry = properties.retry
+        val maxAttempts = if (retry.enabled) retry.maxAttempts.coerceAtLeast(1) else 1
+        var backoff = retry.initialBackoff.toMillis().coerceAtLeast(0)
+        val maxBackoffMillis = retry.maxBackoff.toMillis().coerceAtLeast(retry.initialBackoff.toMillis())
+        var outcome = sendOnce(channel, target, payload)
+        var attempt = 1
+        while (!isSuccess(outcome) && attempt < maxAttempts) {
+            log.warn(
+                "alert notification attempt {}/{} failed via {} target {} (status={}); retrying in {}ms",
+                attempt, maxAttempts, spec.type, target, outcome.httpStatus, backoff,
+            )
+            try {
+                Thread.sleep(backoff)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                return outcome
+            }
+            backoff = (backoff * retry.multiplier).toLong().coerceAtMost(maxBackoffMillis)
+            outcome = sendOnce(channel, target, payload)
+            attempt++
+        }
+        return outcome
+    }
+
+    private fun sendOnce(channel: AlertChannel, target: String, payload: ObjectNode): ChannelSendOutcome =
+        try {
+            channel.send(target, payload)
+        } catch (e: Exception) {
+            ChannelSendOutcome(httpStatus = null, errorMessage = e.message?.take(2000))
+        }
+
+    private fun isSuccess(outcome: ChannelSendOutcome): Boolean =
+        outcome.httpStatus != null && outcome.httpStatus in 200..299
 
     private fun saveNotification(
         event: AlertEvent,
@@ -63,8 +101,7 @@ class AlertDispatchService(
         outcome: ChannelSendOutcome,
     ) {
         val now = LocalDateTime.now(clock)
-        val success = outcome.httpStatus != null && outcome.httpStatus in 200..299
-        val status = if (success) AlertNotificationStatus.SUCCESS else AlertNotificationStatus.FAILED
+        val status = if (isSuccess(outcome)) AlertNotificationStatus.SUCCESS else AlertNotificationStatus.FAILED
         notificationRepository.save(
             AlertNotification {
                 id = UUID.randomUUID()
@@ -79,9 +116,9 @@ class AlertDispatchService(
                 createdTime = now
             },
         )
-        if (!success) {
+        if (status == AlertNotificationStatus.FAILED) {
             log.warn(
-                "alert notification failed for event {} via {} target {}: {}",
+                "alert notification failed permanently for event {} via {} target {}: {}",
                 event.id, spec.type, spec.target, outcome.errorMessage,
             )
         }
