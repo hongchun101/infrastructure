@@ -1,0 +1,10 @@
+package com.github.infrastructure.scheduler.config
+
+import org.springframework.boot.autoconfigure.AutoConfiguration
+import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.scheduling.annotation.EnableScheduling
+
+@AutoConfiguration
+@EnableScheduling
+@EnableConfigurationProperties(SchedulerProperties::class)
+class SchedulerAutoConfiguration

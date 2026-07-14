@@ -24,6 +24,7 @@ val jimmerVersion = "0.10.9"
 dependencies {
     implementation(project(":core"))
     implementation(project(":security"))
+    implementation(project(":scheduler"))
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-validation")
