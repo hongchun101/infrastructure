@@ -15,6 +15,15 @@ spring:
     locations: classpath:db/migration
 
 infrastructure:
+  idempotency:
+    enabled: ${IDEMPOTENCY_ENABLED:true}
+    header-name: Idempotency-Key
+    path-prefixes:
+      - /api/
+    pending-ttl-seconds: ${IDEMPOTENCY_PENDING_TTL:60}
+    completed-ttl-seconds: ${IDEMPOTENCY_COMPLETED_TTL:3600}
+    max-key-length: 255
+    max-cached-body-bytes: 1048576
   filestore:
     default-provider: ${FILESTORE_PROVIDER:local}
     default-bucket: infrastructure
