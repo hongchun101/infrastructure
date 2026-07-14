@@ -3,11 +3,13 @@ package com.github.infrastructure.security.auth
 import com.github.infrastructure.core.web.exception.BusinessException
 import com.github.infrastructure.security.config.SecurityProperties
 import com.github.infrastructure.security.password.PasswordHasher
+import com.github.infrastructure.security.repository.SecurityUserAccountRepository
+import com.github.infrastructure.security.service.AuthService
+import com.github.infrastructure.security.service.LoginRateLimiter
 import com.github.infrastructure.security.token.TokenSession
 import com.github.infrastructure.security.token.TokenSessionRepository
 import com.github.infrastructure.security.token.UuidTokenGenerator
 import com.github.infrastructure.security.user.SecurityUserAccount
-import com.github.infrastructure.security.user.SecurityUserAccountRepository
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
@@ -118,13 +120,19 @@ class AuthServiceTest {
         assertFalse(serviceRepository.hasAccess(tokens.accessToken))
         assertFalse(serviceRepository.hasRefresh(tokens.refreshToken))
     }
-    private fun authService(tokens: ArrayDeque<String>, sessionRepository: InMemoryTokenSessionRepository, enabled: Boolean = true): AuthService = AuthService(
+    private fun authService(
+        tokens: ArrayDeque<String>,
+        sessionRepository: InMemoryTokenSessionRepository,
+        enabled: Boolean = true,
+        rateLimiter: LoginRateLimiter? = null,
+    ): AuthService = AuthService(
         userAccountRepository = StaticUserAccountRepository(enabled),
         tokenSessionRepository = sessionRepository,
         tokenGenerator = UuidTokenGenerator { tokens.removeFirst() },
         passwordHasher = PlainTestPasswordHasher(),
         properties = SecurityProperties(accessTokenTtl = Duration.ofMinutes(30), refreshTokenTtl = Duration.ofDays(7)),
         clock = clock,
+        loginRateLimiter = rateLimiter ?: PermissiveRateLimiter,
     )
     private inner class StaticUserAccountRepository(private val enabled: Boolean) : SecurityUserAccountRepository {
         override fun findForLogin(mode: LoginMode, principal: String): SecurityUserAccount? = SecurityUserAccount(
@@ -157,5 +165,22 @@ class AuthServiceTest {
         fun findRefresh(token: String): TokenSession? = refreshSessions[token]
         fun hasAccess(token: String): Boolean = accessSessions.containsKey(token)
         fun hasRefresh(token: String): Boolean = refreshSessions.containsKey(token)
+    }
+
+    companion object {
+        private val PermissiveRateLimiter = object : LoginRateLimiter(
+            redisTemplate = StubStringRedisTemplate(),
+            properties = SecurityProperties(loginRateLimit = SecurityProperties.LoginRateLimit(enabled = false)),
+            clock = Clock.systemUTC(),
+        ) {
+            override fun isAllowed(principal: String): Boolean = true
+            override fun recordSuccess(principal: String) = Unit
+        }
+
+        private class StubStringRedisTemplate : org.springframework.data.redis.core.StringRedisTemplate() {
+            init {
+                // never used: permissive limiter short-circuits to true before any Redis call
+            }
+        }
     }
 }

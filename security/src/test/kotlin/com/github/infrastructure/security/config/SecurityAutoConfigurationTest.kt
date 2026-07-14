@@ -1,14 +1,15 @@
 package com.github.infrastructure.security.config
 
 import com.github.infrastructure.security.auth.LoginMode
-import com.github.infrastructure.security.auth.AuthController
-import com.github.infrastructure.security.auth.AuthService
+import com.github.infrastructure.security.controller.AuthController
 import com.github.infrastructure.security.filter.AccessTokenAuthenticationFilter
 import com.github.infrastructure.security.password.PasswordHasher
 import com.github.infrastructure.security.permission.PermissionChecker
+import com.github.infrastructure.security.repository.SecurityUserAccountRepository
+import com.github.infrastructure.security.service.AuthService
+import com.github.infrastructure.security.service.LoginRateLimiter
 import com.github.infrastructure.security.token.UuidTokenGenerator
 import com.github.infrastructure.security.user.SecurityUserAccount
-import com.github.infrastructure.security.user.SecurityUserAccountRepository
 import java.util.UUID
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
