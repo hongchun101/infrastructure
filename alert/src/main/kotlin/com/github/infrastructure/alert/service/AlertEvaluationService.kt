@@ -26,6 +26,7 @@ class AlertEvaluationService(
     private val windowCounterRepository: AlertWindowCounterRepository,
     private val matcherRegistry: AlertRuleMatcherRegistry,
     private val dispatchService: AlertDispatchService,
+    private val silenceService: AlertSilenceService,
     private val objectMapper: ObjectMapper,
     private val clock: Clock,
 ) {
@@ -87,6 +88,10 @@ class AlertEvaluationService(
     }
 
     private fun evaluateOne(rule: AlertRule, signal: OperationLogSignal) {
+        if (silenceService.isSilenced(rule.id, LocalDateTime.now(clock))) {
+            log.debug("skipping rule {} due to active silence", rule.code)
+            return
+        }
         val type = runCatching { AlertRuleType.valueOf(rule.ruleType) }.getOrNull() ?: return
         val matcher = matcherRegistry.get(type) ?: return
         val match = matcher.matches(rule, signal) ?: return
