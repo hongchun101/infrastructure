@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.project.controller
 
-import com.github.infrastructure.app.project.CreateProjectRequest
-import com.github.infrastructure.app.project.ProjectResponse
+import com.github.infrastructure.app.project.dto.CreateProjectRequest
+import com.github.infrastructure.app.project.dto.ProjectResponse
 import com.github.infrastructure.app.project.service.ProjectService
 import com.github.infrastructure.security.context.CurrentUserContext
 import jakarta.validation.Valid

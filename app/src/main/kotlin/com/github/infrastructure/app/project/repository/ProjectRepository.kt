@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.project.repository
 
-import com.github.infrastructure.app.project.Project
-import com.github.infrastructure.app.project.*
+import com.github.infrastructure.app.project.entity.Project
+import com.github.infrastructure.app.project.entity.*
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.and

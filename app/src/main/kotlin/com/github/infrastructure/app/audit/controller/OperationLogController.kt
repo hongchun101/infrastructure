@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.audit.controller
 
-import com.github.infrastructure.app.audit.OperationLogResponse
-import com.github.infrastructure.app.audit.PageResponse
+import com.github.infrastructure.app.audit.dto.OperationLogResponse
+import com.github.infrastructure.app.audit.dto.PageResponse
 import com.github.infrastructure.app.audit.service.OperationLogQueryService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping

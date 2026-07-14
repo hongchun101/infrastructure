@@ -1,11 +1,11 @@
 package com.github.infrastructure.app.announcement.service
 
-import com.github.infrastructure.app.announcement.Announcement
-import com.github.infrastructure.app.announcement.AnnouncementResponse
-import com.github.infrastructure.app.announcement.AnnouncementStatus
-import com.github.infrastructure.app.announcement.CreateAnnouncementRequest
-import com.github.infrastructure.app.announcement.ScheduleAnnouncementRequest
-import com.github.infrastructure.app.announcement.UpdateAnnouncementRequest
+import com.github.infrastructure.app.announcement.dto.AnnouncementResponse
+import com.github.infrastructure.app.announcement.dto.CreateAnnouncementRequest
+import com.github.infrastructure.app.announcement.dto.ScheduleAnnouncementRequest
+import com.github.infrastructure.app.announcement.dto.UpdateAnnouncementRequest
+import com.github.infrastructure.app.announcement.entity.Announcement
+import com.github.infrastructure.app.announcement.entity.AnnouncementStatus
 import com.github.infrastructure.app.announcement.repository.AnnouncementReadRepository
 import com.github.infrastructure.app.announcement.repository.AnnouncementRepository
 import com.github.infrastructure.core.web.exception.BusinessException

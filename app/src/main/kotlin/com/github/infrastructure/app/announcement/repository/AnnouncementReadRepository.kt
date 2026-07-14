@@ -1,6 +1,6 @@
 package com.github.infrastructure.app.announcement.repository
 
-import com.github.infrastructure.app.announcement.AnnouncementRead
+import com.github.infrastructure.app.announcement.entity.AnnouncementRead
 import org.babyfish.jimmer.sql.ast.mutation.SaveMode
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient

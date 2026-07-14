@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.audit.repository
 
-import com.github.infrastructure.app.audit.OperationLogEntry
-import com.github.infrastructure.app.audit.*
+import com.github.infrastructure.app.audit.entity.OperationLogEntry
+import com.github.infrastructure.app.audit.entity.*
 import org.babyfish.jimmer.Page
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient

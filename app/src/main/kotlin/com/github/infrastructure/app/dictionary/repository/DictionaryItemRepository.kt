@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.dictionary.repository
 
-import com.github.infrastructure.app.dictionary.DictionaryItem
-import com.github.infrastructure.app.dictionary.*
+import com.github.infrastructure.app.dictionary.entity.DictionaryItem
+import com.github.infrastructure.app.dictionary.entity.*
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.and

@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.user.repository
 
-import com.github.infrastructure.app.user.BackendAccountRole
-import com.github.infrastructure.app.user.*
+import com.github.infrastructure.app.user.entity.BackendAccountRole
+import com.github.infrastructure.app.user.entity.*
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient
 import org.babyfish.jimmer.sql.kt.ast.expression.`eq?`

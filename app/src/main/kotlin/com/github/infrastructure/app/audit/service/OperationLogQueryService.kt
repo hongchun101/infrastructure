@@ -1,8 +1,8 @@
 package com.github.infrastructure.app.audit.service
 
-import com.github.infrastructure.app.audit.OperationLogEntry
-import com.github.infrastructure.app.audit.OperationLogResponse
-import com.github.infrastructure.app.audit.PageResponse
+import com.github.infrastructure.app.audit.dto.OperationLogResponse
+import com.github.infrastructure.app.audit.dto.PageResponse
+import com.github.infrastructure.app.audit.entity.OperationLogEntry
 import com.github.infrastructure.app.audit.repository.OperationLogRepository
 import com.github.infrastructure.core.web.exception.BusinessException
 import org.springframework.http.HttpStatus

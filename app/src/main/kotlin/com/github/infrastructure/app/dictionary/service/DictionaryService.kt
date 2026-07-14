@@ -1,13 +1,13 @@
 package com.github.infrastructure.app.dictionary.service
 
-import com.github.infrastructure.app.dictionary.CreateDictionaryCategoryRequest
-import com.github.infrastructure.app.dictionary.CreateDictionaryItemRequest
-import com.github.infrastructure.app.dictionary.DictionaryCategory
-import com.github.infrastructure.app.dictionary.DictionaryCategoryResponse
-import com.github.infrastructure.app.dictionary.DictionaryItem
-import com.github.infrastructure.app.dictionary.DictionaryItemResponse
-import com.github.infrastructure.app.dictionary.UpdateDictionaryCategoryRequest
-import com.github.infrastructure.app.dictionary.UpdateDictionaryItemRequest
+import com.github.infrastructure.app.dictionary.dto.CreateDictionaryCategoryRequest
+import com.github.infrastructure.app.dictionary.dto.CreateDictionaryItemRequest
+import com.github.infrastructure.app.dictionary.dto.DictionaryCategoryResponse
+import com.github.infrastructure.app.dictionary.dto.DictionaryItemResponse
+import com.github.infrastructure.app.dictionary.dto.UpdateDictionaryCategoryRequest
+import com.github.infrastructure.app.dictionary.dto.UpdateDictionaryItemRequest
+import com.github.infrastructure.app.dictionary.entity.DictionaryCategory
+import com.github.infrastructure.app.dictionary.entity.DictionaryItem
 import com.github.infrastructure.app.dictionary.repository.DictionaryCategoryRepository
 import com.github.infrastructure.app.dictionary.repository.DictionaryItemRepository
 import com.github.infrastructure.core.web.exception.BusinessException

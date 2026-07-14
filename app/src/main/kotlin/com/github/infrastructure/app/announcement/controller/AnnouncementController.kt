@@ -1,10 +1,10 @@
 package com.github.infrastructure.app.announcement.controller
 
-import com.github.infrastructure.app.announcement.AnnouncementResponse
-import com.github.infrastructure.app.announcement.AnnouncementStatus
-import com.github.infrastructure.app.announcement.CreateAnnouncementRequest
-import com.github.infrastructure.app.announcement.ScheduleAnnouncementRequest
-import com.github.infrastructure.app.announcement.UpdateAnnouncementRequest
+import com.github.infrastructure.app.announcement.dto.AnnouncementResponse
+import com.github.infrastructure.app.announcement.dto.CreateAnnouncementRequest
+import com.github.infrastructure.app.announcement.dto.ScheduleAnnouncementRequest
+import com.github.infrastructure.app.announcement.dto.UpdateAnnouncementRequest
+import com.github.infrastructure.app.announcement.entity.AnnouncementStatus
 import com.github.infrastructure.app.announcement.service.AnnouncementService
 import com.github.infrastructure.security.context.CurrentUserContext
 import jakarta.validation.Valid

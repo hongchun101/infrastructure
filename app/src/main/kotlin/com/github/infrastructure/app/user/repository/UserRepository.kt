@@ -1,7 +1,7 @@
 package com.github.infrastructure.app.user.repository
 
-import com.github.infrastructure.app.user.User
-import com.github.infrastructure.app.user.*
+import com.github.infrastructure.app.user.entity.User
+import com.github.infrastructure.app.user.entity.*
 import com.github.infrastructure.security.auth.LoginMode
 import org.babyfish.jimmer.spring.repo.support.AbstractKotlinRepository
 import org.babyfish.jimmer.sql.kt.KSqlClient

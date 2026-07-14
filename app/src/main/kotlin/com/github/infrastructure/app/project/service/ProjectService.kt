@@ -1,8 +1,8 @@
 package com.github.infrastructure.app.project.service
 
-import com.github.infrastructure.app.project.CreateProjectRequest
-import com.github.infrastructure.app.project.Project
-import com.github.infrastructure.app.project.ProjectResponse
+import com.github.infrastructure.app.project.dto.CreateProjectRequest
+import com.github.infrastructure.app.project.dto.ProjectResponse
+import com.github.infrastructure.app.project.entity.Project
 import com.github.infrastructure.app.project.repository.ProjectRepository
 import com.github.infrastructure.core.web.exception.BusinessException
 import com.github.infrastructure.security.context.AuthenticatedUser

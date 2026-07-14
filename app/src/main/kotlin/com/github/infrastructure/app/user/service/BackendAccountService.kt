@@ -1,8 +1,8 @@
 package com.github.infrastructure.app.user.service
 
-import com.github.infrastructure.app.user.BackendAccount
-import com.github.infrastructure.app.user.BackendAccountResponse
-import com.github.infrastructure.app.user.CreateBackendAccountRequest
+import com.github.infrastructure.app.user.dto.BackendAccountResponse
+import com.github.infrastructure.app.user.dto.CreateBackendAccountRequest
+import com.github.infrastructure.app.user.entity.BackendAccount
 import com.github.infrastructure.app.user.repository.BackendAccountRepository
 import com.github.infrastructure.core.web.exception.BusinessException
 import com.github.infrastructure.security.auth.LoginMode
