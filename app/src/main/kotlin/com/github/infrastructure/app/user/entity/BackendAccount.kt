@@ -25,6 +25,6 @@ interface BackendAccount {
     @OneToMany(mappedBy = "account")
     val accountRoles: List<BackendAccountRole>
 
-    @LogicalDeleted
+    @LogicalDeleted("now")
     val deletedAt: LocalDateTime?
 }

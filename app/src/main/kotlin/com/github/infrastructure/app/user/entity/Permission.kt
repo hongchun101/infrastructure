@@ -13,6 +13,7 @@ interface Permission {
     val id: UUID
     val code: String
     val name: String
+    val description: String?
 
     @OneToMany(mappedBy = "permission")
     val rolePermissions: List<RolePermission>

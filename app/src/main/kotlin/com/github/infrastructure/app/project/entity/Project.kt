@@ -27,6 +27,6 @@ interface Project {
 
     val createdTime: LocalDateTime
 
-    @LogicalDeleted
+    @LogicalDeleted("now")
     val deletedAt: LocalDateTime?
 }
