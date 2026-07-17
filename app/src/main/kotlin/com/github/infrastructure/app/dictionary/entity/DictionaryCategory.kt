@@ -18,6 +18,6 @@ interface DictionaryCategory {
     val enabled: Boolean
     val createdTime: LocalDateTime
 
-    @LogicalDeleted
+    @LogicalDeleted("now")
     val deletedAt: LocalDateTime?
 }

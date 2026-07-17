@@ -71,6 +71,11 @@ infrastructure:
       access-key: ${FILESTORE_S3_ACCESS_KEY:}
       secret-key: ${FILESTORE_S3_SECRET_KEY:}
       bucket: ${FILESTORE_S3_BUCKET:}
+  security:
+    access-token-ttl: 30m
+    refresh-token-ttl: 7d
+  observability:
+    trace-header: X-Trace-Id
 
 jimmer:
   language: kotlin
@@ -100,13 +105,6 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.5, 0.95, 0.99
-
-infrastructure:
-  security:
-    access-token-ttl: 30m
-    refresh-token-ttl: 7d
-  observability:
-    trace-header: X-Trace-Id
 
 springdoc:
   api-docs:

@@ -5,7 +5,6 @@ import java.security.MessageDigest
 import java.time.Clock
 import java.time.Duration
 import org.springframework.data.redis.core.StringRedisTemplate
-import org.springframework.stereotype.Component
 
 /**
  * Sliding-window login attempt tracker, backed by Redis counter with a TTL.
@@ -16,8 +15,7 @@ import org.springframework.stereotype.Component
  * subsequent login attempts for the same principal are blocked until the
  * counter expires.
  */
-@Component
-class LoginRateLimiter(
+open class LoginRateLimiter(
     private val redisTemplate: StringRedisTemplate,
     private val properties: SecurityProperties,
     private val clock: Clock,

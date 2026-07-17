@@ -30,6 +30,6 @@ interface Announcement {
     val createdTime: LocalDateTime
     val updatedTime: LocalDateTime
 
-    @LogicalDeleted
+    @LogicalDeleted("now")
     val deletedAt: LocalDateTime?
 }

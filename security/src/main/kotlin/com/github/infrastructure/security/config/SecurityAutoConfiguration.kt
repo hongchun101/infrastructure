@@ -20,6 +20,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.data.redis.connection.RedisConnectionFactory
 import org.springframework.data.redis.core.RedisTemplate
+import org.springframework.data.redis.core.StringRedisTemplate
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer
 import org.springframework.data.redis.serializer.StringRedisSerializer
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
@@ -65,6 +66,13 @@ class SecurityAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun tokenSessionRepository(redisTemplate: RedisTemplate<String, TokenSession>): TokenSessionRepository = RedisTokenSessionRepository(redisTemplate)
+    @Bean
+    @ConditionalOnMissingBean
+    fun loginRateLimiter(
+        redisTemplate: StringRedisTemplate,
+        properties: SecurityProperties,
+        clock: Clock,
+    ): LoginRateLimiter = LoginRateLimiter(redisTemplate, properties, clock)
     @Bean
     @ConditionalOnMissingBean
     fun authService(
