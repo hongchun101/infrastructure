@@ -69,7 +69,11 @@ Each subclass defaults `code` to the matching HTTP status and accepts a caller-p
 
 ### `GlobalExceptionHandler`
 
-Add a `@RestControllerAdvice` that returns `ResponseEntity<R<Nothing>>` and handles:
+Add a `@RestControllerAdvice` that pins the HTTP status per exception type
+and writes the unified `R<Nothing>` body. The handler is the **only**
+component in the project permitted to return `ResponseEntity`; business
+controllers must not. `RResponseBodyAdvice` skips `ResponseEntity` return
+types, so the body is written verbatim. Handlers cover:
 
 - `BusinessException`
 - `MethodArgumentNotValidException`

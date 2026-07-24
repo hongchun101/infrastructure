@@ -14,6 +14,7 @@ import com.github.infrastructure.export.workbook.UploadClient
 import com.github.infrastructure.export.workbook.WorkbookBuilder
 import com.github.infrastructure.filestore.dto.ConfirmUploadRequest
 import com.github.infrastructure.filestore.dto.RequestUploadTokenRequest
+import com.github.infrastructure.filestore.dto.UploadTokenResponse
 import com.github.infrastructure.filestore.service.FileService
 import java.io.ByteArrayOutputStream
 import java.time.Instant
@@ -116,7 +117,7 @@ class AuditLogExportHandler(
         )
     }
 
-    private fun writeXlsx(token: com.github.infrastructure.filestore.dto.UploadTokenResponse, ctx: ExportHandlerContext<AuditLogExportParams>): Long {
+    private fun writeXlsx(token: UploadTokenResponse, ctx: ExportHandlerContext<AuditLogExportParams>): Long {
         val buffer = ByteArrayOutputStream(4 * 1024 * 1024)
         val totalRows = WorkbookBuilder(buffer, sheetName, columns).use { wb ->
             streamRows(ctx) { page -> wb.appendRows(page) }
@@ -125,7 +126,7 @@ class AuditLogExportHandler(
         return totalRows
     }
 
-    private fun writeCsv(token: com.github.infrastructure.filestore.dto.UploadTokenResponse, ctx: ExportHandlerContext<AuditLogExportParams>): Long {
+    private fun writeCsv(token: UploadTokenResponse, ctx: ExportHandlerContext<AuditLogExportParams>): Long {
         val buffer = ByteArrayOutputStream(64 * 1024)
         val totalRows = CsvWriter(buffer, columns).use { csv ->
             streamRows(ctx) { page -> csv.appendRows(page) }

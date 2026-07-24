@@ -25,4 +25,14 @@ class BackendAccountRepository(sql: KSqlClient) : AbstractKotlinRepository<Backe
         where(table.enabled `eq?` true)
         select(table.id)
     }.execute()
+
+    fun findByEmail(email: String): BackendAccount? = createQuery {
+        where(table.email eq email)
+        select(table)
+    }.fetchOneOrNull()
+
+    fun findByPhone(phone: String): BackendAccount? = createQuery {
+        where(table.phone eq phone)
+        select(table)
+    }.fetchOneOrNull()
 }

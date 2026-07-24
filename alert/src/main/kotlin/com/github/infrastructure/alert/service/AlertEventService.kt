@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.infrastructure.alert.dto.AlertEventResponse
 import com.github.infrastructure.alert.dto.PageResponse
 import com.github.infrastructure.alert.entity.AlertEvent
+import com.github.infrastructure.alert.entity.AlertRule
 import com.github.infrastructure.alert.entity.Severity
 import com.github.infrastructure.alert.repository.AlertEventRepository
 import com.github.infrastructure.alert.repository.AlertRuleRepository
@@ -81,7 +82,7 @@ class AlertEventService(
     private fun notFound(id: UUID): BusinessException =
         BusinessException(HttpStatus.NOT_FOUND.value(), "alert event $id not found", HttpStatus.NOT_FOUND)
 
-    private fun AlertEvent.toResponse(rule: com.github.infrastructure.alert.entity.AlertRule?): AlertEventResponse {
+    private fun AlertEvent.toResponse(rule: AlertRule?): AlertEventResponse {
         val detailNode = detail?.takeIf { it.isNotBlank() }?.let { objectMapper.readTree(it) }
         return AlertEventResponse(
             id = id,

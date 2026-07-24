@@ -1,6 +1,7 @@
 package com.github.infrastructure.export.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.infrastructure.export.config.ExportProperties
 import com.github.infrastructure.export.entity.ExportJob
 import com.github.infrastructure.export.entity.ExportJobStatus
 import com.github.infrastructure.export.handler.ExportFormat
@@ -34,7 +35,7 @@ class ExportRunner(
     private val exportJobRepository: ExportJobRepository,
     private val registry: ExportHandlerRegistry,
     private val objectMapper: ObjectMapper,
-    private val properties: com.github.infrastructure.export.config.ExportProperties,
+    private val properties: ExportProperties,
     private val clock: Clock,
 ) : JobHandler {
 

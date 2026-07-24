@@ -2,6 +2,7 @@ package com.github.infrastructure.core.web.exception
 
 import com.github.infrastructure.core.web.response.R
 import jakarta.validation.ConstraintViolationException
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
@@ -16,8 +17,17 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException
 import org.springframework.web.servlet.NoHandlerFoundException
 
+/**
+ * Translates exceptions into the unified [R] envelope. Returning
+ * `ResponseEntity<R<Nothing>>` is the only sanctioned use of `ResponseEntity`
+ * in the project: it lets us pin the HTTP status per exception type while
+ * keeping every business controller free of `ResponseEntity` returns.
+ * [com.github.infrastructure.core.web.response.RResponseBodyAdvice] skips
+ * `ResponseEntity` return types, so this body is written verbatim.
+ */
 @RestControllerAdvice
 class GlobalExceptionHandler {
+    private val log = LoggerFactory.getLogger(javaClass)
     @ExceptionHandler(BusinessException::class)
     fun handleBusinessException(exception: BusinessException): ResponseEntity<R<Nothing>> =
         error(exception.status, exception.code, exception.message)
@@ -60,8 +70,10 @@ class GlobalExceptionHandler {
     fun handleResponseStatusException(exception: ResponseStatusException): ResponseEntity<R<Nothing>> =
         error(HttpStatus.valueOf(exception.statusCode.value()), exception.reason ?: "request failed")
     @ExceptionHandler(Exception::class)
-    fun handleException(exception: Exception): ResponseEntity<R<Nothing>> =
-        error(HttpStatus.INTERNAL_SERVER_ERROR, "internal server error")
+    fun handleException(exception: Exception): ResponseEntity<R<Nothing>> {
+        log.error("unhandled exception", exception)
+        return error(HttpStatus.INTERNAL_SERVER_ERROR, "internal server error")
+    }
     private fun error(status: HttpStatus, message: String): ResponseEntity<R<Nothing>> =
         error(status, status.value(), message)
     private fun error(status: HttpStatus, code: Int, message: String): ResponseEntity<R<Nothing>> =

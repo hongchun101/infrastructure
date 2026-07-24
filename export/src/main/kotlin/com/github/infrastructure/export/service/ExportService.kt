@@ -2,6 +2,7 @@ package com.github.infrastructure.export.service
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.infrastructure.export.config.ExportProperties
 import com.github.infrastructure.export.dto.CreateExportJobRequest
 import com.github.infrastructure.export.dto.ExportJobResponse
 import com.github.infrastructure.export.entity.ExportJob
@@ -13,9 +14,9 @@ import com.github.infrastructure.export.handler.ExportHandlerRegistry
 import com.github.infrastructure.export.repository.ExportJobRepository
 import java.time.Clock
 import java.time.LocalDateTime
+import java.util.UUID
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-
 /**
  * Orchestrates the export-job lifecycle from the client side: create, list,
  * get, cancel, retry, delete. The runner service owns the actual execution.
@@ -29,12 +30,12 @@ class ExportService(
     private val repository: ExportJobRepository,
     private val registry: ExportHandlerRegistry,
     private val objectMapper: ObjectMapper,
-    private val properties: com.github.infrastructure.export.config.ExportProperties,
+    private val properties: ExportProperties,
     private val clock: Clock,
 ) {
 
     @Transactional
-    fun create(request: CreateExportJobRequest, ownerUserId: java.util.UUID?): ExportJobResponse {
+    fun create(request: CreateExportJobRequest, ownerUserId: UUID?): ExportJobResponse {
         val handler = registry.get(request.businessType)
             ?: throw ExportErrors.notFoundType(request.businessType)
 
@@ -79,7 +80,7 @@ class ExportService(
         return ExportJobResponse.from(entity)
     }
 
-    fun list(ownerUserId: java.util.UUID?, includeAll: Boolean): List<ExportJobResponse> {
+    fun list(ownerUserId: UUID?, includeAll: Boolean): List<ExportJobResponse> {
         return if (includeAll) {
             // admin path: return recent regardless of owner
             repository.listAll().map(ExportJobResponse::from)
@@ -89,7 +90,7 @@ class ExportService(
         }
     }
 
-    fun get(id: Long, ownerUserId: java.util.UUID?, isAdmin: Boolean): ExportJobResponse {
+    fun get(id: Long, ownerUserId: UUID?, isAdmin: Boolean): ExportJobResponse {
         val entity = repository.findActiveById(id) ?: throw ExportErrors.notFound(id)
         if (!isAdmin && entity.ownerUserId != ownerUserId) {
             throw ExportErrors.notFound(id)
@@ -98,7 +99,7 @@ class ExportService(
     }
 
     @Transactional
-    fun cancel(id: Long, ownerUserId: java.util.UUID?, isAdmin: Boolean): ExportJobResponse {
+    fun cancel(id: Long, ownerUserId: UUID?, isAdmin: Boolean): ExportJobResponse {
         val entity = repository.findActiveById(id) ?: throw ExportErrors.notFound(id)
         if (!isAdmin && entity.ownerUserId != ownerUserId) {
             throw ExportErrors.notFound(id)
@@ -137,7 +138,7 @@ class ExportService(
     }
 
     @Transactional
-    fun retry(id: Long, ownerUserId: java.util.UUID?, isAdmin: Boolean): ExportJobResponse {
+    fun retry(id: Long, ownerUserId: UUID?, isAdmin: Boolean): ExportJobResponse {
         val entity = repository.findActiveById(id) ?: throw ExportErrors.notFound(id)
         if (!isAdmin && entity.ownerUserId != ownerUserId) {
             throw ExportErrors.notFound(id)
@@ -173,7 +174,7 @@ class ExportService(
     }
 
     @Transactional
-    fun delete(id: Long, ownerUserId: java.util.UUID?, isAdmin: Boolean) {
+    fun delete(id: Long, ownerUserId: UUID?, isAdmin: Boolean) {
         val entity = repository.findActiveById(id) ?: throw ExportErrors.notFound(id)
         if (!isAdmin && entity.ownerUserId != ownerUserId) {
             throw ExportErrors.notFound(id)

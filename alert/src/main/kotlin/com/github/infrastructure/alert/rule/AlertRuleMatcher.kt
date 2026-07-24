@@ -2,6 +2,7 @@ package com.github.infrastructure.alert.rule
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.github.infrastructure.alert.entity.AlertRule
+import com.github.infrastructure.alert.entity.AlertRuleType
 
 /**
  * Snapshot of a rule hit produced by a matcher. The same fingerprint is used as
@@ -14,7 +15,7 @@ data class AlertMatch(
 )
 
 interface AlertRuleMatcher {
-    val type: com.github.infrastructure.alert.entity.AlertRuleType
+    val type: AlertRuleType
 
     /**
      * Decide whether this rule matches the given operation log signal.

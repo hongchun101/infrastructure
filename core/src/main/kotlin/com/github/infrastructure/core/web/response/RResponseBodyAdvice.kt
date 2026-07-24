@@ -2,11 +2,11 @@ package com.github.infrastructure.core.web.response
 
 import org.springframework.core.MethodParameter
 import org.springframework.http.MediaType
+import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageConverter
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter
 import org.springframework.http.server.ServerHttpRequest
 import org.springframework.http.server.ServerHttpResponse
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice
 
@@ -18,8 +18,8 @@ class RResponseBodyAdvice : ResponseBodyAdvice<Any> {
     ): Boolean {
         if (!MappingJackson2HttpMessageConverter::class.java.isAssignableFrom(converterType)) return false
         if (returnType.parameterType == R::class.java) return false
+        if (ResponseEntity::class.java.isAssignableFrom(returnType.parameterType)) return false
         if (returnType.method?.returnType == Void.TYPE) return false
-        if (returnType.method?.isAnnotationPresent(DeleteMapping::class.java) == true) return false
         return true
     }
 

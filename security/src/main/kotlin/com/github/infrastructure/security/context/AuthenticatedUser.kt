@@ -1,5 +1,6 @@
 package com.github.infrastructure.security.context
 
+import com.github.infrastructure.security.auth.AccountType
 import java.util.UUID
 
 data class AuthenticatedUser(
@@ -8,5 +9,5 @@ data class AuthenticatedUser(
     val displayName: String,
     val roles: List<String>,
     val permissions: List<String>,
-    val accountType: com.github.infrastructure.security.auth.AccountType = com.github.infrastructure.security.auth.AccountType.USER,
+    val accountType: AccountType = AccountType.USER,
 )

@@ -1,5 +1,6 @@
 package com.github.infrastructure.app.dictionary.service
 
+import com.github.infrastructure.app.dictionary.cache.DictionaryCache
 import com.github.infrastructure.app.dictionary.dto.CreateDictionaryCategoryRequest
 import com.github.infrastructure.app.dictionary.dto.CreateDictionaryItemRequest
 import com.github.infrastructure.app.dictionary.dto.DictionaryCategoryResponse
@@ -22,6 +23,7 @@ import java.util.UUID
 class DictionaryService(
     private val categoryRepository: DictionaryCategoryRepository,
     private val itemRepository: DictionaryItemRepository,
+    private val cache: DictionaryCache,
     private val clock: Clock,
 ) {
     @Transactional
@@ -40,19 +42,28 @@ class DictionaryService(
                 this.createdTime = createdTime
             },
         ).modifiedEntity
-        return category.toResponse()
+        val response = category.toResponse()
+        cache.putCategoryByCode(response.code, response)
+        cache.putCategoryById(response.id, response)
+        return response
     }
 
     fun listCategories(): List<DictionaryCategoryResponse> =
         categoryRepository.findAllOrderedByCode().map { it.toResponse() }
 
-    fun getCategory(id: UUID): DictionaryCategoryResponse =
-        categoryRepository.findById(id)?.toResponse()
-            ?: throw notFound("category")
+    fun getCategory(id: UUID): DictionaryCategoryResponse {
+        cache.getCategoryById(id)?.let { return it }
+        val response = categoryRepository.findById(id)?.toResponse() ?: throw notFound("category")
+        cache.putCategoryById(id, response)
+        return response
+    }
 
-    fun getCategoryByCode(code: String): DictionaryCategoryResponse =
-        categoryRepository.findByCode(code)?.toResponse()
-            ?: throw notFound("category")
+    fun getCategoryByCode(code: String): DictionaryCategoryResponse {
+        cache.getCategoryByCode(code)?.let { return it }
+        val response = categoryRepository.findByCode(code)?.toResponse() ?: throw notFound("category")
+        cache.putCategoryByCode(code, response)
+        return response
+    }
 
     @Transactional
     fun updateCategory(id: UUID, request: UpdateDictionaryCategoryRequest): DictionaryCategoryResponse {
@@ -67,16 +78,19 @@ class DictionaryService(
                 createdTime = current.createdTime
             },
         ).modifiedEntity
-        return updated.toResponse()
+        val response = updated.toResponse()
+        cache.invalidateAllForCategory(current.code, current.id)
+        cache.putCategoryByCode(response.code, response)
+        cache.putCategoryById(response.id, response)
+        return response
     }
-
     @Transactional
     fun deleteCategory(id: UUID) {
-        if (categoryRepository.findById(id) == null) throw notFound("category")
+        val existing = categoryRepository.findById(id) ?: throw notFound("category")
         itemRepository.deleteByCategoryId(id)
         categoryRepository.deleteById(id)
+        cache.invalidateAllForCategory(existing.code, existing.id)
     }
-
     @Transactional
     fun createItem(categoryCode: String, request: CreateDictionaryItemRequest): DictionaryItemResponse {
         val category = categoryRepository.findByCode(categoryCode) ?: throw notFound("category")
@@ -97,17 +111,21 @@ class DictionaryService(
                 this.createdTime = createdTime
             },
         ).modifiedEntity
+        cache.invalidateItem(categoryCode)
         return item.toResponse()
     }
 
     fun listItems(categoryCode: String, parentId: UUID?): List<DictionaryItemResponse> {
+        cache.getItemsByCategory(categoryCode, parentId)?.let { return it }
         val category = categoryRepository.findByCode(categoryCode) ?: throw notFound("category")
         val items = if (parentId == null) {
             itemRepository.findRootByCategoryId(category.id)
         } else {
             itemRepository.findByCategoryIdAndParentId(category.id, parentId)
         }
-        return items.map { it.toResponse() }
+        val responses = items.map { it.toResponse() }
+        cache.putItemsByCategory(categoryCode, parentId, responses)
+        return responses
     }
 
     @Transactional
@@ -126,6 +144,8 @@ class DictionaryService(
                 createdTime = current.createdTime
             },
         ).modifiedEntity
+        val categoryCode = categoryRepository.findById(current.categoryId)?.code
+        if (categoryCode != null) cache.invalidateItem(categoryCode)
         return updated.toResponse()
     }
 
@@ -139,7 +159,9 @@ class DictionaryService(
                 HttpStatus.CONFLICT,
             )
         }
+        val categoryCode = categoryRepository.findById(item.categoryId)?.code
         itemRepository.deleteById(item.id)
+        if (categoryCode != null) cache.invalidateItem(categoryCode)
     }
 
     private fun validateParent(parentId: UUID, expectedCategoryId: UUID, excludeItemId: UUID? = null) {

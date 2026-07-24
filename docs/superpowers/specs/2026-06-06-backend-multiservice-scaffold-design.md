@@ -160,6 +160,23 @@ Default routes:
 - `POST /projects`
 - `GET /projects/{id}`
 
+Default routes:
+
+- `POST /auth/login`
+- `POST /auth/refresh`
+- `POST /auth/logout`
+- `GET /me`
+- `GET /projects`
+- `POST /projects`
+- `GET /projects/{id}`
+- `GET /dictionaries`, `POST /dictionaries`, `GET /dictionaries/{code}`, `PUT /dictionaries/{id}`, `DELETE /dictionaries/{id}`
+- `GET /dictionaries/{code}/items`, `POST /dictionaries/{code}/items`, `PUT /dictionaries/items/{itemId}`, `DELETE /dictionaries/items/{itemId}`
+- `GET /announcements`, `POST /announcements`, `GET /announcements/{id}`, `PUT /announcements/{id}`, `POST /announcements/{id}/publish|archive|read|schedule`, `DELETE /announcements/{id}/schedule`
+- `GET /login-audits`
+- `GET /roles`, `POST /roles`, `GET /roles/{id}`, `PUT /roles/{id}`, `DELETE /roles/{id}`
+- `GET /permissions`, `POST /permissions`, `GET /permissions/{id}`, `DELETE /permissions/{id}`
+- `PATCH /me`, `POST /me/password`
+
 No route should be introduced under `/api/*`.
 
 ## Database model
@@ -185,14 +202,16 @@ Flyway initializes the following PostgreSQL tables:
 `roles` fields:
 
 - `id`: UUID primary key.
-- `code`: unique stable role code.
+- `code`: unique stable role code (uppercase letters / digits / underscore).
 - `name`: display name.
+- `created_time`: creation timestamp (audit field).
 
 `permissions` fields:
 
 - `id`: UUID primary key.
-- `code`: unique stable permission code.
+- `code`: unique stable permission code (lowercase with `:` or `_` separator).
 - `name`: display name.
+- `description`: optional human-readable description.
 
 `projects` fields:
 
@@ -210,6 +229,48 @@ Seed data:
 - User-role link.
 
 The initial password must be explicit in local configuration or documented test fixtures, not hidden in code comments.
+
+## Cross-cutting business features
+
+Beyond the user/auth/project/announcement surface, `app` ships the following business features that any service backed by this scaffold can rely on.
+
+### Login audit
+
+Every `/auth/login` and `/auth/logout` request is recorded into a partitioned `login_audits` table. The audit row captures:
+
+- `accountType` (USER / BACKEND) and `loginMode` (USERNAME / EMAIL / PHONE) parsed from the request body.
+- `principal` and `username` (best-effort, falls back to the request body when the response is a failure).
+- `accountId` (when the response carries the userId).
+- `outcome` (SUCCESS / FAILURE / LOGOUT) and `failureReason` for failed logins.
+- `clientIp`, `userAgent`, `traceId` from MDC.
+
+The audit recording lives in `app/audit/login/LoginAuditRecorder`, a `OncePerRequestFilter` that wraps the request and response with Spring's `ContentCachingRequestWrapper` / `ContentCachingResponseWrapper`. It only runs for `POST /auth/login` and `POST /auth/logout`. This avoids a reverse dependency from `app` to `security` and keeps the security module's `AuthService` unchanged.
+
+`GET /login-audits` (protected by `login:audit:read`) paginates the audit log with filters for `accountType`, `outcome`, `principal`, `accountId`, and time range.
+
+### Role and permission management
+
+`app/user/role` provides full CRUD for roles and permissions plus role-permission binding. New system permissions seeded by `V19__role_permission_management.sql`:
+
+- `role:read`, `role:write` for role CRUD.
+- `permission:read`, `permission:write` for permission catalog CRUD.
+- `user:profile:write` for self-service profile updates (granted to both ADMIN and BACKEND_OPERATOR).
+- `backend:account:read`, `backend:account:update` for backend account management.
+
+Business rules enforced in the service:
+
+- Role `code` is immutable after creation because it is the stable identifier serialized into token sessions and used by downstream code; updates only change `name` and the permission set.
+- A role with assigned permissions cannot be deleted (`409 Conflict`); detach first.
+- A permission assigned to any role cannot be deleted (`409 Conflict`); detach first.
+- Permission IDs in a `CreateRoleRequest` are validated; unknown IDs return `400 Bad Request`.
+
+### Self-service profile
+
+`PATCH /me` updates the current user's display name, email, and phone. `POST /me/password` rotates the password after verifying the current one. Both endpoints are open to any authenticated user (USER or BACKEND) and require no special permission because the only subject is the caller. Uniqueness of email and phone is checked across both account types so that login by principal continues to find a single account.
+
+### Dictionary cache
+
+`app/dictionary/cache/DictionaryCache` provides a Redis-backed read-through cache for the `category by code`, `category by id`, and `items by category` lookups. The cache is invalidated on every write (create / update / delete of categories and items). Cache TTLs are short (`10` minutes for categories, `5` minutes for items) so a stale read window is bounded even if an invalidation is missed.
 
 ## HTTP contract
 

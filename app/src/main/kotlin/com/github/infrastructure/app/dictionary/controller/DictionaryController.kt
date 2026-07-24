@@ -40,14 +40,11 @@ class DictionaryController(
         @PathVariable id: UUID,
         @Valid @RequestBody request: UpdateDictionaryCategoryRequest,
     ): DictionaryCategoryResponse = dictionaryService.updateCategory(id, request)
-
     @DeleteMapping("/dictionaries/{id}")
     @OperationLog(module = "dictionary", action = "delete-category", description = "Delete dictionary category")
-    fun deleteCategory(@PathVariable id: UUID): org.springframework.http.ResponseEntity<Void> {
+    fun deleteCategory(@PathVariable id: UUID) {
         dictionaryService.deleteCategory(id)
-        return org.springframework.http.ResponseEntity.ok().build()
     }
-
     @GetMapping("/dictionaries/{code}/items")
     fun listItems(
         @PathVariable code: String,
@@ -65,9 +62,9 @@ class DictionaryController(
         @PathVariable itemId: UUID,
         @Valid @RequestBody request: UpdateDictionaryItemRequest,
     ): DictionaryItemResponse = dictionaryService.updateItem(itemId, request)
+
     @DeleteMapping("/dictionaries/items/{itemId}")
-    fun deleteItem(@PathVariable itemId: UUID): org.springframework.http.ResponseEntity<Void> {
+    fun deleteItem(@PathVariable itemId: UUID) {
         dictionaryService.deleteItem(itemId)
-        return org.springframework.http.ResponseEntity.ok().build()
     }
 }
